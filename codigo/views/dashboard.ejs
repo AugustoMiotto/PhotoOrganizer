@@ -42,45 +42,44 @@
                             <label for="tag-filter">Tag:</label>
                             <select id="tag-filter">
                                 <option value="">Todas as Tags</option>
-                                <option value="viagem">Viagem</option>
-                                <option value="natureza">Natureza</option>
-                                <option value="familia">Família</option>
-                                <option value="eventos">Eventos</option>
-                                <!-- Exemplo de como as tags seriam carregadas com EJS: -->
-                                <!-- <% tags.forEach(tag => { %> <option value="<%= tag.name %>"><%= tag.name %></option> <% }); %> -->
+                                <% if (typeof tags !== 'undefined' && tags.length > 0) { %>
+                                    <% tags.forEach(tag => { %>
+                                        <option value="<%= tag.name %>"><%= tag.name %></option>
+                                    <% }); %>
+                                <% } %>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="album-filter">Álbum:</label>
                             <select id="album-filter">
                                 <option value="">Todos os Álbuns</option>
-                                <option value="ferias-2024">Férias 2024</option>
-                                <option value="aniversario-joao">Aniversário João</option>
-                                <option value="paisagens">Paisagens</option>
-                                <!-- Exemplo de como os álbuns seriam carregados com EJS: -->
-                                <!-- <% albums.forEach(album => { %> <option value="<%= album.id %>"><%= album.name %></option> <% }); %> -->
+                                <% if (typeof albums !== 'undefined' && albums.length > 0) { %>
+                                    <% albums.forEach(album => { %>
+                                        <option value="<%= album.id %>"><%= album.name %></option>
+                                    <% }); %>
+                                <% } %>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="location-filter">Local:</label>
                             <select id="location-filter">
                                 <option value="">Todos os Locais</option>
-                                <option value="rio-de-janeiro">Rio de Janeiro</option>
-                                <option value="sao-paulo">São Paulo</option>
-                                <option value="praia">Praia</option>
-                                <!-- Exemplo de como os locais seriam carregados com EJS: -->
-                                <!-- <% locations.forEach(loc => { %> <option value="<%= loc %>"><%= loc %></option> <% }); %> -->
+                                <% if (typeof locations !== 'undefined' && locations.length > 0) { %>
+                                    <% locations.forEach(location => { %>
+                                        <option value="<%= location %>"><%= location %></option>
+                                    <% }); %>
+                                <% } %>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="equipment-filter">Equipamento:</label>
                             <select id="equipment-filter">
                                 <option value="">Todos os Equipamentos</option>
-                                <option value="celular">Celular</option>
-                                <option value="dslr">DSLR</option>
-                                <option value="drone">Drone</option>
-                                <!-- Exemplo de como os equipamentos seriam carregados com EJS: -->
-                                <!-- <% equipments.forEach(eq => { %> <option value="<%= eq %>"><%= eq %></option> <% }); %> -->
+                                <% if (typeof equipments !== 'undefined' && equipments.length > 0) { %>
+                                    <% equipments.forEach(equipment => { %>
+                                        <option value="<%= equipment %>"><%= equipment %></option>
+                                    <% }); %>
+                                <% } %>
                             </select>
                         </div>
                         <div class="form-group">
@@ -99,13 +98,11 @@
                     </div>
 
                     <div class="photo-grid">
-                        <!--
-                            Exemplo de Álbuns e Fotos (representados como post-its).
-                            Em um EJS real, haveria um loop aqui:
-                            <% photosOrAlbums.forEach((item, index) => { %>
+                        <% if (typeof photosAndAlbums !== 'undefined' && photosAndAlbums.length > 0) { %>
+                            <% photosAndAlbums.forEach((item, index) => { %>
                                 <div class="photo-card <%= item.type === 'album' ? 'album-card' : '' %>" data-id="<%= item.id %>" data-type="<%= item.type %>" style="--card-index: <%= index %>;">
-                                    <div class="pin <%= item.type === 'album' ? 'pin-color-3' : 'pin-color-1' %>"></div>
-                                    <img src="https://placehold.co/300x200/F0E68C/5A3D2B?text=Album+Ferias" alt="Capa do Álbum Férias">
+                                    <div class="pin"></div>
+                                    <img src="<%= item.imageUrl %>" alt="<%= item.title %>">
                                     <div class="info">
                                         <h4><%= item.title %></h4>
                                         <p>Descrição: <%= item.description %></p>
@@ -116,86 +113,16 @@
                                             <p>Data: <%= item.captureDate %></p>
                                             <p>Equipamento: <%= item.equipment %></p>
                                         <% } %>
-                                        <p>Tags: #viagem, #praia, #verão</p>
+                                        <p>Tags: <%= item.tags.map(tag => '#' + tag).join(', ') %></p>
                                     </div>
                                 </div>
                             <% }); %>
-                        -->
-
-                        <!-- Exemplo de Álbuns (representados como um grupo de fotos alfinetadas) -->
-                        <div class="photo-card album-card" data-id="album-1" data-type="album" style="--card-index: 0;">
-                            <div class="pin"></div>
-                            <img src="https://placehold.co/300x200/F0E68C/5A3D2B?text=Album+Ferias" alt="Capa do Álbum Férias">
-                            <div class="info">
-                                <h4>Férias de Verão 2024</h4>
-                                <p>Descrição: Fotos da viagem para a praia.</p>
-                                <p>Total de Fotos: 12</p>
-                                <p>Tags: #viagem, #praia, #verão</p>
-                            </div>
-                        </div>
-
-                        <div class="photo-card album-card" data-id="album-2" data-type="album" style="--card-index: 1;">
-                            <div class="pin"></div>
-                            <img src="https://placehold.co/300x200/D2B48C/5A3D2B?text=Album+Familia" alt="Capa do Álbum Família">
-                            <div class="info">
-                                <h4>Momentos em Família</h4>
-                                <p>Descrição: Reuniões e eventos familiares.</p>
-                                <p>Total de Fotos: 8</p>
-                                <p>Tags: #familia, #alegria, #casa</p>
-                            </div>
-                        </div>
-
-                        <!-- Exemplo de Fotos Individuais -->
-                        <div class="photo-card" data-id="photo-1" data-type="photo" style="--card-index: 2;">
-                            <div class="pin"></div>
-                            <img src="https://placehold.co/300x200/BC8F8F/FFFFFF?text=Foto+1" alt="Foto da Natureza">
-                            <div class="info">
-                                <h4>Pôr do Sol na Montanha</h4>
-                                <p>Local: Serra da Estrela</p>
-                                <p>Data: 2023-10-26</p>
-                                <p>Equipamento: DSLR Nikon</p>
-                                <p>Tags: #natureza, #paisagem, #pordosol</p>
-                            </div>
-                        </div>
-
-                        <div class="photo-card" data-id="photo-2" data-type="photo" style="--card-index: 3;">
-                            <div class="pin"></div>
-                            <img src="https://placehold.co/300x200/F4A460/5A3D2B?text=Foto+2" alt="Foto de Comida">
-                            <div class="info">
-                                <h4>Jantar Especial</h4>
-                                <p>Local: Restaurante X</p>
-                                <p>Data: 2024-03-15</p>
-                                <p>Equipamento: Celular Samsung</p>
-                                <p>Tags: #comida, #gastronomia, #noite</p>
-                            </div>
-                        </div>
-
-                        <div class="photo-card" data-id="photo-3" data-type="photo" style="--card-index: 4;">
-                            <div class="pin"></div>
-                            <img src="https://placehold.co/300x200/DEB887/5A3D2B?text=Foto+3" alt="Foto de Pet">
-                            <div class="info">
-                                <h4>Meu Gato Fofinho</h4>
-                                <p>Local: Casa</p>
-                                <p>Data: 2024-01-01</p>
-                                <p>Equipamento: Celular iPhone</p>
-                                <p>Tags: #pet, #gato, #animal</p>
-                            </div>
-                        </div>
-
-                        <div class="photo-card" data-id="photo-4" data-type="photo" style="--card-index: 5;">
-                            <div class="pin"></div>
-                            <img src="https://placehold.co/300x200/CD853F/FDF8E8?text=Foto+4" alt="Foto de Evento">
-                            <div class="info">
-                                <h4>Show ao Vivo</h4>
-                                <p>Local: Arena Musical</p>
-                                <p>Data: 2023-11-20</p>
-                                <p>Equipamento: Celular Google Pixel</p>
-                                <p>Tags: #show, #musica, #evento</p>
-                            </div>
-                        </div>
+                        <% } else { %>
+                            <p style="text-align: center; width: 100%; color: var(--dark-brown);">Nenhuma foto ou álbum para exibir.</p>
+                        <% } %>
                     </div>
 
-                    <!-- Barra de Ações (OCULTA por padrão) -->
+                    <!-- Barra de Ações (OCULTA por padrão, seria visível com JS ao selecionar itens) -->
                     <div id="action-bar" class="action-bar" style="opacity: 0; visibility: hidden; transform: translateX(-50%) rotate(1deg);">
                         <button class="btn btn-secondary">Compartilhar</button>
                         <button class="btn">Editar</button>
@@ -212,7 +139,7 @@
         </div>
     </footer>
 
-    <!-- Modal de Compartilhamento (OCULTO por padrão) -->
+    <!-- Modal de Compartilhamento (OCULTO por padrão, seria visível com JS) -->
     <div id="share-modal-overlay" class="modal-overlay" style="opacity: 0; visibility: hidden;">
         <div class="modal-content" style="transform: rotate(2deg);">
             <button class="modal-close-btn">&times;</button>

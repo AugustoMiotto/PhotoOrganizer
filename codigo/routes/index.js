@@ -10,6 +10,8 @@ router.get('/', function(req, res, next) {
   res.render('register');
 });
 
+
+
 // GET login page
 router.get('/login', function(req,res,next){
   res.render('login');
