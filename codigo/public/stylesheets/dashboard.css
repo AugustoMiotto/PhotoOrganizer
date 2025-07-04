@@ -1,0 +1,614 @@
+ /* Variáveis CSS - Nova Paleta de Cores (Marrons e Amarelo Queimado) */
+        :root {
+            --dark-brown: #5A3D2B; /* Marrom escuro para texto principal, headers */
+            --medium-brown: #7B5B47; /* Marrom médio para botões, destaques */
+            --light-brown: #A07A65; /* Marrom claro para acentos, links */
+            --burnt-yellow: #D4AF37; /* Amarelo queimado para secundário, hover */
+            --corkboard-color: #8B4513; /* SaddleBrown - base para cortiça */
+            --corkboard-texture: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="%238B4513"/><circle cx="2" cy="2" r="1" fill="rgba(0,0,0,0.1)"/><circle cx="8" cy="8" r="1" fill="rgba(0,0,0,0.1)"/><circle cx="5" cy="5" r="1" fill="rgba(255,255,255,0.1)"/></svg>'); /* Textura de cortiça SVG */
+            --paper-color: #fdfaf0; /* Cor de papel para post-its */
+            --border-color: #A07A65; /* Borda em tom marrom claro */
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.2);
+            --shadow-dark: rgba(0, 0, 0, 0.3);
+
+            /* Cores dos alfinetes (baseadas na nova paleta) */
+            --pin-color-1: #ff0000; /* Vermelho */
+            --pin-color-2: #002fff; /* Azul */
+            --pin-color-3: #15ff00; /* Verde */
+            --pin-color-4: #fbff00; /* Amarelo */
+        }
+
+        /* Reset básico e estilos globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%; /* Garante que o body ocupe a altura total para rolagem horizontal */
+            overflow-y: hidden; /* Esconde a rolagem vertical */
+            font-family: 'Inter', sans-serif;
+            color: var(--dark-brown);
+            line-height: 1.6;
+            background-color: var(--corkboard-color); /* Fundo de cortiça para o body */
+            background-image: var(--corkboard-texture);
+            background-size: 10px 10px;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        a {
+            color: var(--light-brown); /* Links em marrom claro */
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        /* Estilos de Botões */
+        .btn {
+            display: inline-block;
+            background: var(--medium-brown);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 8px var(--shadow-light);
+        }
+
+        .btn:hover {
+            background: var(--dark-brown);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px var(--shadow-medium);
+        }
+
+        .btn-secondary {
+            background: var(--burnt-yellow); /* Botão secundário em amarelo queimado */
+        }
+
+        .btn-secondary:hover {
+            background: #B8860B; /* Tom mais escuro de amarelo queimado */
+        }
+
+        .btn-danger {
+            background: var(--pin-color-1); /* Botão de perigo em tom de alfinete vermelho/sienna */
+        }
+
+        .btn-danger:hover {
+            background: #8B3E2F; /* Tom mais escuro */
+        }
+
+        /* Layout Principal para Rolagem Horizontal */
+        .main-wrapper {
+            display: flex; /* Permite que os filhos se alinhem horizontalmente */
+            flex-grow: 1; /* Ocupa o espaço restante */
+            overflow-x: auto; /* Habilita a rolagem horizontal */
+            white-space: nowrap; /* Impede que os itens quebrem linha */
+            padding-bottom: 20px; /* Espaço para a barra de rolagem */
+        }
+
+        /* Header (fixo no topo) */
+        header {
+            background: var(--dark-brown); /* Header em marrom escuro */
+            color: #fff;
+            padding: 1rem 0;
+            box-shadow: 0 2px 5px var(--shadow-medium);
+            width: 100%; /* Ocupa a largura total da viewport */
+            flex-shrink: 0; /* Não encolhe */
+        }
+
+        header .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        header nav ul {
+            display: flex;
+        }
+
+        header nav ul li {
+            margin-left: 20px;
+        }
+
+        header nav ul li a {
+            color: #fff;
+            font-weight: bold;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        header nav ul li a:hover {
+            color: var(--burnt-yellow); /* Hover em amarelo queimado */
+            text-decoration: none;
+        }
+
+        /* Footer (fixo na parte inferior) */
+        footer {
+            background: var(--dark-brown); /* Footer em marrom escuro */
+            color: #fff;
+            text-align: center;
+            padding: 1rem 0;
+            box-shadow: 0 -2px 5px var(--shadow-medium);
+            width: 100%; /* Ocupa a largura total da viewport */
+            flex-shrink: 0; /* Não encolhe */
+        }
+
+        /* Seções de Página (Dashboard, Upload, etc.) */
+        .page-section {
+            display: inline-block; /* Permite que fiquem lado a lado */
+            vertical-align: top; /* Alinha no topo */
+            white-space: normal; /* Permite que o conteúdo interno quebre linha */
+            width: 100vw; /* Cada seção ocupa a largura total da viewport */
+            flex-shrink: 0; /* Impede que as seções encolham */
+            padding: 20px; /* Padding para o conteúdo */
+        }
+
+        /* Dashboard Layout */
+        .dashboard-layout {
+            display: flex;
+            height: calc(100vh - 120px); /* Ajusta para o header e footer */
+            background: transparent; /* Permite que o fundo de cortiça do body apareça */
+            padding: 20px 0; /* Padding interno */
+        }
+
+        /* Sidebar - Estilo Post-it e Hover para revelar opções */
+        .sidebar {
+            width: 280px; /* Largura um pouco maior para a sidebar */
+            background: var(--paper-color); /* Cor de papel */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px var(--shadow-medium);
+            flex-shrink: 0;
+            margin-right: 30px; /* Espaço entre sidebar e galeria */
+            position: relative;
+            transform: rotate(-1deg); /* Rotação sutil */
+            align-self: flex-start; /* Fixa no topo */
+            overflow: hidden; /* Esconde o conteúdo que transborda */
+            padding-top: 50px; /* Espaço para o alfinete e título */
+        }
+
+        .sidebar::before { /* Alfinete */
+            content: '';
+            position: absolute;
+            top: 10px; /* Ajustado para ficar mais visível no topo */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: var(--pin-color-3); /* Alfinete em tom de marrom */
+            /* box-shadow: 0 2px 4px rgba(0,0,0,0.3); */ /* Removido para evitar transparência */
+            z-index: 10; /* Z-index do alfinete */
+        }
+
+        .sidebar::after { /* Haste do alfinete */
+            content: '';
+            position: absolute;
+            top: 35px; /* Ajustado para acompanhar o alfinete */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 0 0 2px 2px;
+            z-index: 9;
+        }
+
+        .sidebar-title { /* Título "Organizar por" sempre visível */
+            position: absolute;
+            top: 20px; /* Posição do título */
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: var(--dark-brown);
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 12; /* Z-index maior que o alfinete para ficar por cima */
+        }
+
+        .sidebar-content {
+            opacity: 0;
+            visibility: hidden;
+            max-height: 0; /* Oculta a altura para que não ocupe espaço */
+            transition: opacity 0.5s ease, visibility 0.5s ease, max-height 0.5s ease;
+            overflow: hidden; /* Garante que o conteúdo não vaze durante a transição */
+            padding-top: 10px; /* Espaço entre o título e o conteúdo que aparece */
+        }
+
+        .sidebar:hover .sidebar-content {
+            opacity: 1;
+            visibility: visible;
+            max-height: 600px; /* Altura máxima para revelar o conteúdo (ajuste conforme necessário) */
+            overflow: visible; /* Permite rolagem se o conteúdo for maior que max-height */
+        }
+
+        .sidebar h3 { /* Títulos de subseções dentro do sidebar-content */
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--dark-brown);
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .sidebar ul {
+            margin-bottom: 20px;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar ul li a {
+            display: block;
+            padding: 8px 10px;
+            border-radius: 5px;
+            color: var(--dark-brown);
+            text-decoration: none;
+            transition: background 0.3s ease;
+        }
+
+        .sidebar ul li a:hover,
+        .sidebar ul li a.active {
+            background: var(--light-brown); /* Hover em marrom claro */
+            color: #fff;
+        }
+
+        /* Filtros dentro da Sidebar - Estilo Post-it para inputs/selects */
+        .sidebar .form-group {
+            margin-bottom: 15px;
+        }
+
+        .sidebar .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--dark-brown);
+        }
+
+        .sidebar .form-group input[type="text"],
+        .sidebar .form-group input[type="date"],
+        .sidebar .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 0.9rem;
+            background-color: var(--paper-color); /* Fundo de papel */
+            box-shadow: inset 0 1px 3px var(--shadow-light);
+            color: var(--dark-brown);
+        }
+
+
+        /* Main Content - Gallery */
+        .gallery-content {
+            flex-grow: 1;
+            padding: 20px;
+            background: transparent; /* Já é cortiça pelo body */
+            position: relative;
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: var(--paper-color); /* Header da galeria em cor de papel */
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px var(--shadow-light);
+            position: relative;
+            transform: rotate(0.5deg); /* Rotação sutil */
+        }
+
+        .gallery-header::before { /* Alfinete para o header da galeria */
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: var(--pin-color-4); /* Alfinete em amarelo queimado */
+            /* box-shadow: 0 2px 4px rgba(0,0,0,0.3); */ /* Removido para evitar transparência */
+            z-index: 10;
+        }
+
+        .gallery-header::after { /* Haste do alfinete */
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 0 0 2px 2px;
+            z-index: 9;
+        }
+
+
+        .gallery-header h2 {
+            margin: 0;
+            color: var(--dark-brown);
+        }
+
+        .gallery-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Grid de Fotos/Álbuns (Quadro de Cortiça) */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 30px; /* Espaço entre os "cards" */
+            padding: 20px;
+        }
+
+        .photo-card {
+            background: var(--paper-color);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            box-shadow: 0 5px 15px var(--shadow-medium);
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            padding-top: 10px; /* Espaço para o alfinete */
+            /* Rotação aleatória simulada, em um EJS real seria <%= Math.floor(Math.random() * 6) - 3 %> */
+            transform: rotate(calc((var(--card-index, 0) * 0.5 - 1.5) * 1deg)); /* Apenas para simular variação */
+            transform-origin: center center;
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 180px; /* Altura fixa para miniaturas */
+            object-fit: cover;
+            display: block;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .photo-card .info {
+            padding: 10px;
+        }
+
+        .photo-card .info h4 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+            color: var(--dark-brown);
+        }
+
+        .photo-card .info p {
+            font-size: 0.85rem;
+            color: var(--medium-brown);
+            margin-bottom: 3px;
+        }
+
+        /* Alfinetes (Pins) */
+        .pin {
+            position: absolute;
+            top: 0px; /* Ajuste para centralizar visualmente */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--pin-color-1); /* Cor padrão do alfinete */
+            /* box-shadow: 0 2px 4px rgba(0,0,0,0.3); */ /* Removido para evitar transparência */
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8em;
+            color: white;
+            font-weight: bold;
+        }
+
+        .pin::before {
+            content: '';
+            position: absolute;
+            bottom: -10px; /* Haste do alfinete */
+            width: 2px;
+            height: 15px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 0 0 2px 2px;
+        }
+
+        /* Variações de cores para os alfinetes (simuladas com nth-child para estática) */
+        .photo-card:nth-child(4n+1) .pin { background: var(--pin-color-1); }
+        .photo-card:nth-child(4n+2) .pin { background: var(--pin-color-2); }
+        .photo-card:nth-child(4n+3) .pin { background: var(--pin-color-3); }
+        .photo-card:nth-child(4n) .pin { background: var(--pin-color-4); }
+
+        /* Opções de Ação (Barra de Ações - OCULTA por padrão) */
+        .action-bar {
+            position: fixed; /* Fixo na tela, não rola com o conteúdo principal */
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--paper-color); /* Cor de papel */
+            border: 1px solid var(--border-color);
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px var(--shadow-dark);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+            opacity: 0; /* OCULTA por padrão */
+            visibility: hidden; /* OCULTA por padrão */
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.2s ease;
+            transform: translateX(-50%) rotate(1deg); /* Rotação sutil */
+        }
+
+        /* Modal de Compartilhamento (OCULTO por padrão) */
+        .modal-overlay {
+            position: fixed; /* Fixo na tela, não rola com o conteúdo principal */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0; /* OCULTO por padrão */
+            visibility: hidden; /* OCULTO por padrão */
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-content {
+            background: var(--paper-color);
+            border: 1px solid var(--border-color);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px var(--shadow-dark);
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+            transform: rotate(2deg); /* Rotação simulada para estática */
+        }
+
+        .modal-content::before { /* Alfinete para o modal */
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: var(--pin-color-4); /* Alfinete em amarelo queimado */
+            /* box-shadow: 0 2px 4px rgba(0,0,0,0.3); */ /* Removido para evitar transparência */
+            z-index: 10;
+        }
+
+        .modal-content::after { /* Haste do alfinete para o modal */
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 0 0 2px 2px;
+            z-index: 9;
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark-brown);
+            transition: color 0.2s ease;
+        }
+
+        .modal-close-btn:hover {
+            color: var(--medium-brown);
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--dark-brown);
+            text-align: center;
+        }
+
+        /* Formulário dentro do modal */
+        .modal-content .form-group label {
+            text-align: left;
+        }
+        .modal-content .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            box-shadow: inset 0 1px 3px var(--shadow-light);
+            background-color: var(--paper-color);
+            color: var(--dark-brown);
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .dashboard-layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+
+            .gallery-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .gallery-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .gallery-controls input,
+            .gallery-controls select {
+                width: 100%;
+            }
+
+            .photo-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 20px;
+            }
+
+            .photo-card img {
+                height: 150px;
+            }
+
+            .action-bar {
+                flex-wrap: wrap;
+                justify-content: center;
+                width: 90%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .photo-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .photo-card {
+                max-width: 300px;
+                margin: auto;
+            }
+        }

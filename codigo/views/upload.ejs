@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/stylesheets/upload.css">
+    <title>PhotoOrganizer - Enviar Foto</title>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>PhotoOrganizer</h1>
+            <nav>
+                <ul>
+                    <li><a href="/dashboard">Minhas Fotos</a></li>
+                    <li><a href="/upload">Enviar Foto</a></li>
+                    <li><a href="/albums">Álbuns</a></li>
+                    <li><a href="/profile">Perfil</a></li>
+                    <li><a href="/logout">Sair</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <!-- Upload Section -->
+        <section class="page-section">
+            <div class="container">
+                <div class="form-container">
+                    <h2>Enviar Nova Foto</h2>
+                    <form action="/upload" method="POST" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="image">Arquivo de Imagem:</label>
+                            <input type="file" id="image" name="image" accept="image/jpeg, image/png, image/gif" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="title">Título:</label>
+                            <input type="text" id="title" name="title" placeholder="Título da foto">
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Descrição:</label>
+                            <textarea id="description" name="description" placeholder="Descreva sua foto"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Local:</label>
+                            <input type="text" id="location" name="location" placeholder="Onde a foto foi tirada?">
+                        </div>
+                        <div class="form-group">
+                            <label for="capture_date">Data da Captura:</label>
+                            <input type="date" id="capture_date" name="capture_date">
+                        </div>
+                        <div class="form-group">
+                            <label for="equipment">Equipamento:</label>
+                            <input type="text" id="equipment" name="equipment" placeholder="Qual equipamento foi usado?">
+                        </div>
+                        <div class="form-group">
+                            <label for="tags">Tags (separadas por vírgula):</label>
+                            <input type="text" id="tags" name="tags" placeholder="Ex: viagem, praia, verão">
+                        </div>
+                        <div class="form-group">
+                            <label for="album">Álbum:</label>
+                            <select id="album" name="album">
+                                <option value="">Nenhum Álbum</option>
+                                <option value="ferias-2024">Férias de Verão 2024</option>
+                                <option value="momentos-familia">Momentos em Família</option>
+                                <option value="novo-album">Criar Novo Álbum...</option>
+                                <!-- Exemplo de como os álbuns seriam carregados com EJS: -->
+                                <!-- <% albums.forEach(album => { %> <option value="<%= album.id %>"><%= album.name %></option> <% }); %> -->
+                            </select>
+                        </div>
+                        <button type="submit" class="btn">Enviar Foto</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 PhotoOrganizer. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+</body>
+</html>
