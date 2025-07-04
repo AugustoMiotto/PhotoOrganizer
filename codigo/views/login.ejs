@@ -8,6 +8,13 @@
 </head>
 <body>
     <div class="form-container" style="--form-rotation: -2;">
+        <h2>Criar Nova Conta</h2>
+        <% if (locals.error) { %>
+            <p style="color: red; text-align: center;"><%= error %></p>
+        <% } %>
+        <% if (locals.success) { %>
+            <p style="color: green; text-align: center;"><%= success %></p>
+        <% } %>
         <h2>Bem-vindo ao PhotoOrganizer</h2>
         <form action="/login" method="POST">
             <div class="form-group">

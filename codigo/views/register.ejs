@@ -9,6 +9,13 @@
 <body>
     <div class="form-container" style="--form-rotation: 1;">
         <h2>Criar Nova Conta</h2>
+        <% if (locals.error) { %>
+            <p style="color: red; text-align: center;"><%= error %></p>
+        <% } %>
+        <% if (locals.success) { %>
+            <p style="color: green; text-align: center;"><%= success %></p>
+        <% } %>
+
         <form action="/register" method="POST">
             <div class="form-group">
                 <label for="username">Nome de Usuário:</label>
