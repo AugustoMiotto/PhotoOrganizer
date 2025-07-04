@@ -25,6 +25,21 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
+     bio: {
+      type: DataTypes.TEXT,
+      allowNull: true, // Biografia é opcional
+    },
+    subscriptionPlan: {
+      type: DataTypes.STRING,
+      defaultValue: 'Gratuito', // Plano padrão
+    },
+     avatarUrl: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      validate: {
+          isUrl: true, // Opcional: valida se é uma URL
+      }
+     }
   }, {
     hooks: {
       beforeCreate: async (user) => {

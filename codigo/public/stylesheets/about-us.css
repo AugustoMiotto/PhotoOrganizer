@@ -1,0 +1,147 @@
+/* public/stylesheets/about-us.css */
+
+/* Cabeçalho da seção "Sobre Nós" */
+.about-us-header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: var(--dark-brown);
+}
+
+.about-us-header h2 {
+    font-size: 2.8rem;
+    margin-bottom: 10px;
+    color: var(--dark-brown);
+}
+
+.about-us-header p {
+    font-size: 1.2rem;
+    color: var(--medium-brown);
+}
+
+/* Container para os cartões da equipe */
+.about-us-container {
+    display: flex;
+    flex-direction: column; /* Coloca o cabeçalho acima dos cards */
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 120px); /* Ajusta altura para o conteúdo principal */
+    padding: 20px;
+    width: 100%;
+}
+
+.team-cards-wrapper {
+    display: flex;
+    flex-wrap: wrap; /* Permite que os cards quebrem linha em telas menores */
+    justify-content: center;
+    gap: 30px; /* Espaço entre os cartões */
+    max-width: 1200px; /* Limita a largura do wrapper */
+    width: 100%;
+}
+
+/* Estilo para cada cartão de membro da equipe */
+.team-card {
+    background: var(--paper-color); /* Fundo cor de papel */
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px var(--shadow-dark); /* Sombra mais forte */
+    text-align: center;
+    max-width: 320px; /* Largura máxima para cada cartão */
+    width: 100%; /* Garante que ocupe a largura disponível */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative; /* Para o alfinete */
+    transform: rotate(calc((var(--card-rotation, 0) - 0.5) * 2deg)); /* Rotação aleatória sutil */
+    /* Exemplo de var --card-rotation: 1, 2, 3 para os 3 cards */
+}
+
+/* Adicionando alfinetes aos cards da equipe */
+.team-card::before { /* Alfinete */
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    /* Use cores diferentes para cada alfinete ou uma cor padrão */
+    background: var(--pin-color-1); /* Cor padrão do alfinete */
+    z-index: 10;
+}
+
+.team-card:nth-child(2)::before {
+    background: var(--pin-color-2); /* Alfinete azul para o segundo card */
+}
+
+.team-card:nth-child(3)::before {
+    background: var(--pin-color-3); /* Alfinete verde para o terceiro card */
+}
+
+
+.team-card::after { /* Haste do alfinete */
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 20px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 0 0 2px 2px;
+    z-index: 9;
+}
+
+
+.team-card:hover {
+    transform: translateY(-5px) scale(1.02); /* Leve elevação e aumento ao passar o mouse */
+    box-shadow: 0 12px 24px var(--shadow-dark);
+}
+
+.team-member-photo {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto 20px;
+    border: 4px solid var(--burnt-yellow); /* Borda amarela queimada */
+    box-shadow: 0 4px 8px var(--shadow-medium);
+}
+
+.team-card h3 {
+    color: var(--dark-brown);
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+}
+
+.member-description {
+    color: var(--medium-brown);
+    font-size: 1rem;
+    margin-bottom: 20px;
+    line-height: 1.5;
+    min-height: 75px; /* Altura mínima para manter os cards mais uniformes */
+}
+
+.btn-small {
+    padding: 8px 15px; /* Botão um pouco menor */
+    font-size: 0.9rem;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+    .about-us-header h2 {
+        font-size: 2.2rem;
+    }
+
+    .about-us-header p {
+        font-size: 1rem;
+    }
+
+    .team-cards-wrapper {
+        flex-direction: column; /* Cartões empilhados em telas menores */
+        align-items: center;
+    }
+
+    .team-card {
+        max-width: 90%; /* Ocupa mais largura em mobile */
+        padding: 25px;
+    }
+}

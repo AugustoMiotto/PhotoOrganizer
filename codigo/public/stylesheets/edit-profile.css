@@ -1,0 +1,108 @@
+/* public/stylesheets/edit-profile.css */
+
+/* Estilos para o cartão de edição, mantendo a consistência do profile-card */
+.profile-card.edit-card {
+    /* Pode remover a rotação se quiser um visual mais "reto" para edição */
+    transform: none; /* remove a rotação sutil */
+    /* Remove o alfinete, pois é para exibição, não edição */
+    &::before, &::after {
+        content: none;
+    }
+}
+
+footer {
+    background: var(--dark-brown); /* Footer em marrom escuro */
+    color: #fff;
+    text-align: left;
+    text-indent: 40%;
+    padding: 1rem 0;
+    box-shadow: 0 -2px 5px var(--shadow-medium);
+    width: 100%; /* Ocupa a largura total da viewport */
+    flex-shrink: 0; /* Não encolhe */
+}
+footer a{
+color: white;
+padding-left: 40%;
+}
+
+.edit-profile-form {
+    text-align: left; /* Alinha os labels e inputs à esquerda */
+    margin-top: 20px;
+    max-width: 450px; /* Limita a largura do formulário para melhor leitura */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block; /* Cada label em sua própria linha */
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: var(--dark-brown);
+    font-size: 1.1rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="url"],
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--light-brown);
+    border-radius: 8px;
+    font-size: 1rem;
+    color: var(--dark-brown);
+    background-color: #fff; /* Fundo branco para inputs */
+    box-shadow: inset 0 1px 3px var(--shadow-light); /* Sombra interna para profundidade */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="email"]:focus,
+.form-group input[type="url"]:focus,
+.form-group textarea:focus {
+    border-color: var(--burnt-yellow); /* Borda amarela ao focar */
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2); /* Sombra suave de foco */
+    outline: none; /* Remove o outline padrão do navegador */
+}
+
+.form-group textarea {
+    resize: vertical; /* Permite redimensionamento vertical */
+    min-height: 80px;
+}
+
+/* Estilo para inputs readonly (como o email) */
+.form-group input[readonly] {
+    background-color: #f0f0f0; /* Fundo mais claro para indicar que é somente leitura */
+    cursor: not-allowed;
+}
+
+.current-avatar-preview {
+    display: block;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-top: 10px;
+    border: 2px solid var(--light-brown);
+    box-shadow: 0 2px 5px var(--shadow-light);
+}
+
+/* Alinhamento dos botões no final do formulário */
+.profile-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* Ajustes de responsividade para o formulário de edição */
+@media (max-width: 600px) {
+    .edit-profile-form {
+        max-width: 100%;
+        padding: 0 10px; /* Padding interno para evitar que o formulário encoste nas bordas */
+    }
+}
