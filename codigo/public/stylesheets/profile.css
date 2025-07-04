@@ -1,0 +1,327 @@
+/* Variáveis CSS - Paleta de Cores (Marrons e Amarelo Queimado) */
+:root {
+    --dark-brown: #5A3D2B; /* Marrom escuro para texto principal, headers */
+    --medium-brown: #7B5B47; /* Marrom médio para botões, destaques */
+    --light-brown: #A07A65; /* Marrom claro para acentos, links */
+    --burnt-yellow: #D4AF37; /* Amarelo queimado para secundário, hover */
+    --corkboard-color: #8B4513; /* SaddleBrown - base para cortiça */
+    --corkboard-texture: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="%238B4513"/><circle cx="2" cy="2" r="1" fill="rgba(0,0,0,0.1)"/><circle cx="8" cy="8" r="1" fill="rgba(0,0,0,0.1)"/><circle cx="5" cy="5" r="1" fill="rgba(255,255,255,0.1)"/></svg>'); /* Textura de cortiça SVG */
+    --paper-color: #fdfaf0; /* Cor de papel para post-its */
+    --border-color: #A07A65; /* Borda em tom marrom claro */
+    --shadow-light: rgba(0, 0, 0, 0.1);
+    --shadow-medium: rgba(0, 0, 0, 0.2);
+    --shadow-dark: rgba(0, 0, 0, 0.3);
+
+    /* Cores dos alfinetes (baseadas na nova paleta) */
+    --pin-color-1: #ff0000; /* Vermelho */
+    --pin-color-2: #002fff; /* Azul */
+    --pin-color-3: #15ff00; /* Verde */
+    --pin-color-4: #fbff00; /* Amarelo */
+}
+
+/* Reset básico e estilos globais */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%; /* Garante que o body ocupe a altura total para rolagem horizontal */
+    overflow-y: hidden; /* Esconde a rolagem vertical */
+    font-family: 'Inter', sans-serif;
+    color: var(--dark-brown);
+    line-height: 1.6;
+    background-color: var(--corkboard-color); /* Fundo de cortiça para o body */
+    background-image: var(--corkboard-texture);
+    background-size: 10px 10px;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+a {
+    color: var(--light-brown); /* Links em marrom claro */
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+ul {
+    list-style: none;
+}
+
+/* Estilos de Botões */
+.btn {
+    display: inline-block;
+    background: var(--medium-brown);
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 8px var(--shadow-light);
+}
+
+.btn:hover {
+    background: var(--dark-brown);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px var(--shadow-medium);
+}
+
+.btn-secondary {
+    background: var(--burnt-yellow); /* Botão secundário em amarelo queimado */
+}
+
+.btn-secondary:hover {
+    background: #B8860B; /* Tom mais escuro de amarelo queimado */
+}
+
+.btn-danger {
+    background: var(--pin-color-1); /* Botão de perigo em tom de alfinete vermelho/sienna */
+}
+
+.btn-danger:hover {
+    background: #8B3E2F; /* Tom mais escuro */
+}
+
+/* Layout Principal para Rolagem Horizontal */
+.main-wrapper {
+    display: flex; /* Permite que os filhos se alinhem horizontalmente */
+    flex-grow: 1; /* Ocupa o espaço restante */
+    overflow-x: auto; /* Habilita a rolagem horizontal */
+    white-space: nowrap; /* Impede que os itens quebrem linha */
+    padding-bottom: 20px; /* Espaço para a barra de rolagem */
+}
+
+/* Header (fixo no topo) */
+header {
+    background: var(--dark-brown); /* Header em marrom escuro */
+    color: #fff;
+    padding: 1rem 0;
+    box-shadow: 0 2px 5px var(--shadow-medium);
+    width: 100%; /* Ocupa a largura total da viewport */
+    flex-shrink: 0; /* Não encolhe */
+}
+
+header .container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+header nav ul {
+    display: flex;
+}
+
+header nav ul li {
+    margin-left: 20px;
+}
+
+header nav ul li a {
+    color: #fff;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+header nav ul li a:hover {
+    color: var(--burnt-yellow); /* Hover em amarelo queimado */
+    text-decoration: none;
+}
+
+/* Footer (fixo na parte inferior) */
+footer {
+    background: var(--dark-brown); /* Footer em marrom escuro */
+    color: #fff;
+    text-align: center;
+    padding: 1rem 0;
+    box-shadow: 0 -2px 5px var(--shadow-medium);
+    width: 100%; /* Ocupa a largura total da viewport */
+    flex-shrink: 0; /* Não encolhe */
+}
+
+/* Seções de Página (Dashboard, Upload, etc.) */
+.page-section {
+    display: inline-block; /* Permite que fiquem lado a lado */
+    vertical-align: top; /* Alinha no topo */
+    white-space: normal; /* Permite que o conteúdo interno quebre linha */
+    width: 100vw; /* Cada seção ocupa a largura total da viewport */
+    flex-shrink: 0; /* Impede que as seções encolham */
+    padding: 20px; /* Padding para o conteúdo */
+}
+
+/* Estilos específicos da página de perfil */
+.profile-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 120px); /* Altura do conteúdo principal */
+    padding: 20px;
+}
+
+.profile-card {
+    background: var(--paper-color); /* Cor de papel para o cartão de perfil */
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px var(--shadow-dark);
+    max-width: 600px;
+    width: 90%;
+    text-align: center;
+    position: relative; /* Para o alfinete */
+    transform: rotate(1.5deg); /* Rotação sutil */
+}
+
+.profile-card::before { /* Alfinete */
+    content: '';
+    position: absolute;
+    top: -10px; /* Ajuste para centralizar visualmente */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: var(--pin-color-2); /* Cor do alfinete */
+    /* box-shadow: 0 2px 4px rgba(0,0,0,0.3); */ /* Removido para evitar transparência */
+    z-index: 10;
+}
+
+.profile-card::after { /* Haste do alfinete */
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 20px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 0 0 2px 2px;
+    z-index: 9;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto 20px;
+    border: 3px solid var(--light-brown);
+    box-shadow: 0 4px 8px var(--shadow-medium);
+}
+
+.profile-card h2 {
+    color: var(--dark-brown);
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+}
+
+.profile-card p {
+    color: var(--medium-brown);
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+.profile-card .bio {
+    margin-top: 20px;
+    font-style: italic;
+    color: var(--dark-brown);
+    font-size: 1rem;
+    max-width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 30px 0;
+    padding: 15px 0;
+    border-top: 1px dashed var(--border-color);
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.profile-stat-item {
+    text-align: center;
+}
+
+.profile-stat-item strong {
+    display: block;
+    font-size: 1.5rem;
+    color: var(--burnt-yellow);
+    margin-bottom: 5px;
+}
+
+.profile-stat-item span {
+    font-size: 0.9rem;
+    color: var(--dark-brown);
+}
+
+.profile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    header .container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    header nav ul {
+        margin-top: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    header nav ul li {
+        margin: 5px 10px;
+    }
+
+    .profile-card {
+        padding: 25px;
+    }
+
+    .profile-card h2 {
+        font-size: 1.8rem;
+    }
+
+    .profile-card p {
+        font-size: 1rem;
+    }
+
+    .profile-stats {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-card {
+        padding: 20px;
+    }
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+    }
+    .profile-stat-item strong {
+        font-size: 1.2rem;
+    }
+}

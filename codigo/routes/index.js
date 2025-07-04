@@ -22,6 +22,13 @@ router.get('/dashboard', function(req,res,next){
   res.render('dashboard');
 });
 
+// Get profile
+
+router.get('/profile', function(req,res,next){
+  res.render('profile');
+});
+
+
 // --------- ROTAS POST ---------
 
 // POST register page

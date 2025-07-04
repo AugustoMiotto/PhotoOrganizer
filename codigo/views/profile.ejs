@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/stylesheets/profile.css">
+    <title>PhotoOrganizer - Perfil do Usuário</title>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>PhotoOrganizer</h1>
+            <nav>
+                <ul>
+                    <li><a href="/dashboard">Minhas Fotos</a></li>
+                    <li><a href="/upload">Enviar Foto</a></li>
+                    <li><a href="/albums">Álbuns</a></li>
+                    <li><a href="/profile">Perfil</a></li>
+                    <li><a href="/logout">Sair</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <section class="page-section">
+            <div class="profile-container">
+                <% // Verificamos se 'user' está definido antes de tentar acessar suas propriedades. %>
+                <% // A lógica para redirecionar usuários não logados ainda deve estar no seu backend. %>
+                <% if (typeof user !== 'undefined' && user) { %>
+                    <div class="profile-card">
+                        <img src="<%= user.avatarUrl || 'https://placehold.co/150x150/D4AF37/5A3D2B?text=Avatar' %>" alt="Avatar do Usuário" class="profile-avatar">
+                        <h2><%= user.name %></h2>
+                        <p><%= user.email %></p>
+                        <% if (user.bio) { %>
+                            <p class="bio"><%= user.bio %></p>
+                        <% } %>
+
+                        <div class="profile-stats">
+                            <div class="profile-stat-item">
+                                <strong><%= user.totalPhotos %></strong>
+                                <span>Fotos</span>
+                            </div>
+                            <div class="profile-stat-item">
+                                <strong><%= user.totalAlbums %></strong>
+                                <span>Álbuns</span>
+                            </div>
+                            <div class="profile-stat-item">
+                                <strong><%= user.storageUsed %> MB</strong>
+                                <span>Armazenamento</span>
+                            </div>
+                        </div>
+
+                        <p>Plano de Assinatura: <strong><%= user.subscriptionPlan %></strong></p>
+
+                        <div class="profile-actions">
+                            <button class="btn btn-secondary">Editar Perfil</button>
+                            <button class="btn">Alterar Senha</button>
+                            <button class="btn">Gerenciar Assinatura</button>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <div class="profile-card">
+                        <p style="text-align: center; color: var(--dark-brown);">Não foi possível carregar os dados do usuário.</p>
+                        <p style="text-align: center; color: var(--dark-brown);">Por favor, tente recarregar a página ou entre em contato com o suporte.</p>
+                        <!-- Não há botão de login direto aqui, pois o usuário já deveria estar logado. -->
+                        <!-- Qualquer redirecionamento para login deve ser feito no backend. -->
+                    </div>
+                <% } %>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 PhotoOrganizer. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+</body>
+</html>
