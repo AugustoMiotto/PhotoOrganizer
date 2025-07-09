@@ -23,11 +23,18 @@
     </header>
 
     <div class="main-wrapper">
-        <!-- Upload Section -->
         <section class="page-section">
             <div class="container">
                 <div class="form-container">
                     <h2>Enviar Nova Foto</h2>
+
+                    <% if (locals.error) { %>
+                        <p style="color: red; text-align: center;"><%= error %></p>
+                    <% } %>
+                    <% if (locals.success) { %>
+                        <p style="color: green; text-align: center;"><%= success %></p>
+                    <% } %>
+
                     <form action="/upload" method="POST" enctype="multipart/form-data">
                         <div class="form-group">
                             <label for="image">Arquivo de Imagem:</label>
@@ -61,12 +68,12 @@
                             <label for="album">Álbum:</label>
                             <select id="album" name="album">
                                 <option value="">Nenhum Álbum</option>
-                                <option value="ferias-2024">Férias de Verão 2024</option>
-                                <option value="momentos-familia">Momentos em Família</option>
-                                <option value="novo-album">Criar Novo Álbum...</option>
-                                <!-- Exemplo de como os álbuns seriam carregados com EJS: -->
-                                <!-- <% albums.forEach(album => { %> <option value="<%= album.id %>"><%= album.name %></option> <% }); %> -->
-                            </select>
+                                <% if (locals.albums && albums.length > 0) { %>
+                                    <% albums.forEach(album => { %>
+                                        <option value="<%= album.id %>"><%= album.name %></option>
+                                    <% }); %>
+                                <% } %>
+                                <option value="create-new-album">Criar Novo Álbum...</option> </select>
                         </div>
                         <button type="submit" class="btn">Enviar Foto</button>
                     </form>

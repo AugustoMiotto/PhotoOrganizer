@@ -37,7 +37,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true,
       validate: {
-          isUrl: true, // Opcional: valida se é uma URL
       }
      }
   }, {

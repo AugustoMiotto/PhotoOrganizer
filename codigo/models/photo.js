@@ -1,4 +1,3 @@
-// models/photo.js
 module.exports = (sequelize, DataTypes) => {
   const Photo = sequelize.define('Photo', {
     id: {
@@ -10,11 +9,16 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.UUID,
       allowNull: false,
     },
-    filename: {
+    filename: { // Nome original do arquivo enviado pelo usuário 
       type: DataTypes.STRING,
       allowNull: false,
     },
-    filepath: { // Caminho no servidor onde a imagem está salva
+    storageFilename: { // Nome único do arquivo salvo no servidor 
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true, // Garante que não haverá duplicatas no servidor
+    },
+    filepath: { // Caminho público para acessar a imagem 
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -38,14 +42,18 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    location: { // Exemplo de metadado
+    location: { 
       type: DataTypes.STRING,
       allowNull: true,
     },
-    equipment: { // Exemplo de metadado
+    equipment: { 
       type: DataTypes.STRING,
       allowNull: true,
     },
+    captureDate: { 
+  type: DataTypes.DATEONLY, 
+  allowNull: true,
+},
   });
 
   Photo.associate = (models) => {

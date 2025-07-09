@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/stylesheets/profile.css"> <link rel="stylesheet" href="/stylesheets/edit-profile.css"> <title>PhotoOrganizer - Editar Perfil</title>
+    <link rel="stylesheet" href="/stylesheets/profile.css">
+    <link rel="stylesheet" href="/stylesheets/edit-profile.css">
+    <title>PhotoOrganizer - Editar Perfil</title>
 </head>
 <body>
     <header>
@@ -35,7 +37,7 @@
                     <% } %>
 
                     <% if (typeof user !== 'undefined' && user) { %>
-                        <form action="/profile/edit" method="POST" class="edit-profile-form">
+                        <form action="/profile/edit" method="POST" enctype="multipart/form-data" class="edit-profile-form">
                             <div class="form-group">
                                 <label for="username">Nome de Usuário:</label>
                                 <input type="text" id="username" name="username" value="<%= user.username %>" required>
@@ -52,9 +54,43 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="avatarUrl">URL do Avatar:</label>
-                                <input type="url" id="avatarUrl" name="avatarUrl" value="<%= user.avatarUrl || '' %>">
-                                <img src="<%= user.avatarUrl || 'https://placehold.co/80x80/D4AF37/5A3D2B?text=Avatar' %>" alt="Avatar Atual" class="current-avatar-preview">
+                                <label>Foto de Perfil:</label>
+                                <div class="avatar-options">
+                                    <input type="radio" id="avatar_current" name="avatar_source" value="current" checked>
+                                    <label for="avatar_current">Manter Foto Atual</label>
+
+                                    <input type="radio" id="avatar_existing" name="avatar_source" value="existing">
+                                    <label for="avatar_existing">Usar Foto Existente</label>
+
+                                    <input type="radio" id="avatar_upload" name="avatar_source" value="upload">
+                                    <label for="avatar_upload">Fazer Upload de Nova Foto</label>
+                                </div>
+                                <img src="<%= user.avatarUrl || 'https://placehold.co/80x80/D4AF37/5A3D2B?text=Avatar' %>" alt="Avatar Atual" class="current-avatar-preview" id="current-avatar-preview">
+                            </div>
+
+                            <div class="form-group" id="existing-photo-group" style="display: none;">
+                                <label for="existing_photo_id">Escolha uma foto das suas publicadas:</label>
+                                <select id="existing_photo_id" name="existing_photo_id">
+                                    <option value="">Selecione uma foto</option>
+                                    <% if (locals.photos && photos.length > 0) { %>
+                                        <% photos.forEach(photo => { %>
+                                            <option value="<%= photo.id %>" <% if (user.avatarUrl && user.avatarUrl.includes(photo.filepath)) { %>selected<% } %>>
+                                                <%= photo.title || photo.filename %>
+                                            </option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
+                                <div id="existing-photo-preview" style="margin-top: 10px; text-align: center;">
+                                    <% if (user.avatarUrl && user.avatarUrl !== 'https://placehold.co/80x80/D4AF37/5A3D2B?text=Avatar') { %>
+                                        <img src="<%= user.avatarUrl %>" alt="Prévia da Foto Selecionada" style="max-width: 100px; max-height: 100px; border-radius: 8px;">
+                                    <% } %>
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="new-photo-upload-group" style="display: none;">
+                                <label for="new_avatar_file">Selecione uma nova foto para o perfil:</label>
+                                <input type="file" id="new_avatar_file" name="new_avatar_file" accept="image/*">
+                                <img src="#" alt="Prévia da Nova Foto" class="current-avatar-preview" id="new-avatar-preview" style="display: none; margin-top: 10px;">
                             </div>
 
                             <div class="profile-actions">
@@ -74,8 +110,84 @@
     <footer>
         <div class="container">
             <p>&copy; 2025 PhotoOrganizer. Todos os direitos reservados.</p>
-            <a href="/about-us">Sobre os criadores</a>
+            <p><a href="/about-us">Sobre a Equipe</a></p>
         </div>
     </footer>
+
+    <script>
+        // Lógica JavaScript para exibir/ocultar campos e prévias
+        document.addEventListener('DOMContentLoaded', function() {
+            const avatarSourceRadios = document.querySelectorAll('input[name="avatar_source"]');
+            const existingPhotoGroup = document.getElementById('existing-photo-group');
+            const newPhotoUploadGroup = document.getElementById('new-photo-upload-group');
+            const newAvatarFileInput = document.getElementById('new_avatar_file');
+            const newAvatarPreview = document.getElementById('new-avatar-preview');
+            const existingPhotoSelect = document.getElementById('existing_photo_id');
+            const existingPhotoPreview = document.getElementById('existing-photo-preview');
+            const currentAvatarPreviewImg = document.getElementById('current-avatar-preview'); // Prévia da foto atual
+
+            function toggleAvatarFields() {
+                existingPhotoGroup.style.display = 'none';
+                newPhotoUploadGroup.style.display = 'none';
+                newAvatarFileInput.removeAttribute('required'); // Remove required por padrão
+                newAvatarPreview.style.display = 'none'; // Esconde a prévia da nova foto
+
+                const selectedValue = document.querySelector('input[name="avatar_source"]:checked').value;
+
+                if (selectedValue === 'existing') {
+                    existingPhotoGroup.style.display = 'block';
+                    // Re-exibir a prévia da foto existente se uma já estiver selecionada
+                    const selectedPhotoPath = existingPhotoSelect.options[existingPhotoSelect.selectedIndex]?.dataset.filepath;
+                    if (selectedPhotoPath) {
+                         existingPhotoPreview.innerHTML = `<img src="${selectedPhotoPath}" alt="Prévia da Foto Selecionada" style="max-width: 100px; max-height: 100px; border-radius: 8px;">`;
+                    } else {
+                         existingPhotoPreview.innerHTML = ''; // Limpa se nada selecionado
+                    }
+                } else if (selectedValue === 'upload') {
+                    newPhotoUploadGroup.style.display = 'block';
+                    newAvatarFileInput.setAttribute('required', 'required'); // Torna o upload obrigatório se selecionado
+                }
+            }
+
+            // Event listeners para os rádios
+            avatarSourceRadios.forEach(radio => {
+                radio.addEventListener('change', toggleAvatarFields);
+            });
+
+            // Prévia da nova foto ao selecionar um arquivo
+            newAvatarFileInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        newAvatarPreview.src = e.target.result;
+                        newAvatarPreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    newAvatarPreview.src = '#';
+                    newAvatarPreview.style.display = 'none';
+                }
+            });
+
+            // Prévia da foto existente ao selecionar no dropdown
+            existingPhotoSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const selectedPhotoId = selectedOption.value;
+                const selectedPhotoUrl = selectedOption.dataset.filepath; // Adicionar dataset.filepath na option
+
+                if (selectedPhotoId) {
+                    existingPhotoPreview.innerHTML = `<img src="${selectedPhotoUrl}" alt="Prévia da Foto Selecionada" style="max-width: 100px; max-height: 100px; border-radius: 8px;">`;
+                } else {
+                    existingPhotoPreview.innerHTML = '';
+                }
+            });
+
+            // Inicializa o estado dos campos ao carregar a página
+            toggleAvatarFields();
+
+        
+        });
+    </script>
 </body>
 </html>

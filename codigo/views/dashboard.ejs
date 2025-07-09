@@ -23,69 +23,72 @@
     </header>
 
     <div class="main-wrapper">
-        <!-- Dashboard Section -->
         <section class="page-section">
             <div class="dashboard-layout">
                 <aside class="sidebar">
                     <div class="sidebar-title">Organizar por</div>
                     <div class="sidebar-content">
                         <ul>
-                            <li><a href="#" class="active">Todas as Fotos</a></li>
-                            <li><a href="#">Meus Álbuns</a></li>
-                            <li><a href="#">Categorias/Tags</a></li>
-                            <li><a href="#">Locais</a></li>
-                            <li><a href="#">Equipamentos</a></li>
-                        </ul>
+                            <li><a href="/dashboard" class="<%= !selectedTag && !selectedAlbumId && !selectedLocation && !selectedEquipment && !selectedCaptureDate && !searchTerm ? 'active' : '' %>">Todas as Fotos</a></li>
+                            </ul>
 
                         <h3>Filtros</h3>
-                        <div class="form-group">
-                            <label for="tag-filter">Tag:</label>
-                            <select id="tag-filter">
-                                <option value="">Todas as Tags</option>
-                                <% if (typeof tags !== 'undefined' && tags.length > 0) { %>
-                                    <% tags.forEach(tag => { %>
-                                        <option value="<%= tag.name %>"><%= tag.name %></option>
-                                    <% }); %>
-                                <% } %>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="album-filter">Álbum:</label>
-                            <select id="album-filter">
-                                <option value="">Todos os Álbuns</option>
-                                <% if (typeof albums !== 'undefined' && albums.length > 0) { %>
-                                    <% albums.forEach(album => { %>
-                                        <option value="<%= album.id %>"><%= album.name %></option>
-                                    <% }); %>
-                                <% } %>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="location-filter">Local:</label>
-                            <select id="location-filter">
-                                <option value="">Todos os Locais</option>
-                                <% if (typeof locations !== 'undefined' && locations.length > 0) { %>
-                                    <% locations.forEach(location => { %>
-                                        <option value="<%= location %>"><%= location %></option>
-                                    <% }); %>
-                                <% } %>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="equipment-filter">Equipamento:</label>
-                            <select id="equipment-filter">
-                                <option value="">Todos os Equipamentos</option>
-                                <% if (typeof equipments !== 'undefined' && equipments.length > 0) { %>
-                                    <% equipments.forEach(equipment => { %>
-                                        <option value="<%= equipment %>"><%= equipment %></option>
-                                    <% }); %>
-                                <% } %>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="date-filter">Data da Foto:</label>
-                            <input type="date" id="date-filter">
-                        </div>
+                        <form id="filter-form" action="/dashboard" method="GET">
+                            <div class="form-group">
+                                <label for="search-input">Pesquisar:</label>
+                                <input type="text" id="search-input" name="search" placeholder="Título, descrição, nome do arquivo" value="<%= searchTerm %>">
+                            </div>
+                            <div class="form-group">
+                                <label for="tag-filter">Tag:</label>
+                                <select id="tag-filter" name="tag">
+                                    <option value="">Todas as Tags</option>
+                                    <% if (typeof tags !== 'undefined' && tags.length > 0) { %>
+                                        <% tags.forEach(tag => { %>
+                                            <option value="<%= tag %>" <%= selectedTag === tag ? 'selected' : '' %>><%= tag %></option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="album-filter">Álbum:</label>
+                                <select id="album-filter" name="albumId">
+                                    <option value="">Todos os Álbuns</option>
+                                    <% if (typeof albums !== 'undefined' && albums.length > 0) { %>
+                                        <% albums.forEach(album => { %>
+                                            <option value="<%= album.id %>" <%= selectedAlbumId === album.id ? 'selected' : '' %>><%= album.name %></option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="location-filter">Local:</label>
+                                <select id="location-filter" name="location">
+                                    <option value="">Todos os Locais</option>
+                                    <% if (typeof locations !== 'undefined' && locations.length > 0) { %>
+                                        <% locations.forEach(location => { %>
+                                            <option value="<%= location %>" <%= selectedLocation === location ? 'selected' : '' %>><%= location %></option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="equipment-filter">Equipamento:</label>
+                                <select id="equipment-filter" name="equipment">
+                                    <option value="">Todos os Equipamentos</option>
+                                    <% if (typeof equipments !== 'undefined' && equipments.length > 0) { %>
+                                        <% equipments.forEach(equipment => { %>
+                                            <option value="<%= equipment %>" <%= selectedEquipment === equipment ? 'selected' : '' %>><%= equipment %></option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="date-filter">Data da Foto:</label>
+                                <input type="date" id="date-filter" name="captureDate" value="<%= selectedCaptureDate %>">
+                            </div>
+                            <button type="submit" class="btn">Aplicar Filtros</button>
+                            <a href="/dashboard" class="btn btn-secondary">Limpar Filtros</a>
+                        </form>
                     </div>
                 </aside>
 
@@ -93,9 +96,16 @@
                     <div class="gallery-header">
                         <h2>Minhas Fotos</h2>
                         <div class="gallery-controls">
-                            <button class="btn">Enviar Nova Foto</button>
+                            <a href="/upload" class="btn">Enviar Nova Foto</a>
                         </div>
                     </div>
+
+                    <% if (locals.error) { %>
+                        <p style="color: red; text-align: center;"><%= error %></p>
+                    <% } %>
+                    <% if (locals.success) { %>
+                        <p style="color: green; text-align: center;"><%= success %></p>
+                    <% } %>
 
                     <div class="photo-grid">
                         <% if (typeof photosAndAlbums !== 'undefined' && photosAndAlbums.length > 0) { %>
@@ -113,16 +123,15 @@
                                             <p>Data: <%= item.captureDate %></p>
                                             <p>Equipamento: <%= item.equipment %></p>
                                         <% } %>
-                                        <p>Tags: <%= item.tags.map(tag => '#' + tag).join(', ') %></p>
+                                        <p>Tags: <%= item.tags && item.tags.length > 0 ? item.tags.map(tag => '#' + tag).join(', ') : 'Nenhuma tag' %></p>
                                     </div>
                                 </div>
                             <% }); %>
                         <% } else { %>
-                            <p style="text-align: center; width: 100%; color: var(--dark-brown);">Nenhuma foto ou álbum para exibir.</p>
+                            <p style="text-align: center; width: 100%; color: var(--dark-brown);">Nenhuma foto ou álbum para exibir com os filtros aplicados.</p>
                         <% } %>
                     </div>
 
-                    <!-- Barra de Ações (OCULTA por padrão, seria visível com JS ao selecionar itens) -->
                     <div id="action-bar" class="action-bar" style="opacity: 0; visibility: hidden; transform: translateX(-50%) rotate(1deg);">
                         <button class="btn btn-secondary">Compartilhar</button>
                         <button class="btn">Editar</button>
@@ -140,7 +149,6 @@
         </div>
     </footer>
 
-    <!-- Modal de Compartilhamento (OCULTO por padrão, seria visível com JS) -->
     <div id="share-modal-overlay" class="modal-overlay" style="opacity: 0; visibility: hidden;">
         <div class="modal-content" style="transform: rotate(2deg);">
             <button class="modal-close-btn">&times;</button>
