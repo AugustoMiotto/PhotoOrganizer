@@ -1073,42 +1073,62 @@ router.post('/create-album', isAuthenticated, async (req, res) => {
 });
 
 // ROTA POST SHARE 
-router.post('/share', isAuthenticated, async (req, res) => {
+router.post('/share', isAuthenticated, upload.none(), async (req, res) => {
   try {
-    const ownerId = req.user.id;
-    const { selectedItems, recipientEmail, isPublic, expiresAt } = req.body; // Campos do formulário
-    const parsedSelectedItems = JSON.parse(selectedItems); // Array de {id: '...', type: '...'}
+     console.log('[POST /share] -- INÍCIO DA ROTA DE COMPARTILHAMENTO --');
+     console.log('[POST /share] Conteúdo COMPLETO do req.body (raw):', JSON.stringify(req.body, null, 2));
+     console.log('[POST /share] Itens selecionados recebidos (string JSON):', req.body.selectedItems); // Este deve ser a string JSON
+    
+     // Garante que selectedItemsString não é undefined antes de tentar parsear
+    const selectedItemsString = req.body.selectedItems || '[]'; // Se for undefined, usa '[]'
 
+
+     let parsedSelectedItems;
+     try {
+       parsedSelectedItems = JSON.parse(selectedItemsString); 
+     } catch (parseError) {
+      console.error('[POST /share] ERRO ao parsear selectedItems JSON:', parseError);
+      // Retorna um erro JSON legível para o frontend
+       return res.status(400).json({ error: 'Erro nos dados de seleção. Formato inválido. Tente novamente.' });
+  }
+
+
+
+  const ownerId = req.user.id;
+    const { recipientEmail, isPublic, expiresAt } = req.body;
+
+    const isPublicChecked = isPublic === 'on' || isPublic === true; 
+    const trimmedRecipientEmail = recipientEmail ? recipientEmail.trim() : '';
+
+    
     if (!parsedSelectedItems || parsedSelectedItems.length === 0) {
+      // CORREÇÃO: Retorna JSON
       return res.status(400).json({ error: 'Nenhum item selecionado para compartilhar.' });
     }
 
-    // Validação básica de campos
-    const isPublicChecked = isPublic === 'on' || isPublic === true; // Checa se é 'on' (do checkbox) ou booleano
-    const trimmedRecipientEmail = recipientEmail ? recipientEmail.trim() : '';
-
     if (!isPublicChecked && !trimmedRecipientEmail) {
-        return res.status(400).json({ error: 'Para compartilhamento interno, o e-mail do destinatário é obrigatório.' });
+      // CORREÇÃO: Retorna JSON
+      return res.status(400).json({ error: 'Para compartilhamento interno, o e-mail do destinatário é obrigatório.' });
     }
 
     let sharedWithUser = null;
     if (trimmedRecipientEmail && !isPublicChecked) {
-        // Encontrar o sharedWithUser se for compartilhamento interno
         sharedWithUser = await db.User.findOne({ where: { email: trimmedRecipientEmail } });
         if (!sharedWithUser) {
+            // CORREÇÃO: Retorna JSON
             return res.status(404).json({ error: 'Usuário destinatário não encontrado para compartilhamento interno.' });
         }
     }
 
-    let shareLinks = []; // Para armazenar links gerados
+    let shareLinks = []; 
     let itemsProcessed = 0;
 
     for (const item of parsedSelectedItems) {
+      console.log(`[POST /share] Processando item: ID=${item.id}, Type=${item.type}`);
       let contentModel;
       let contentType;
       let validationError = null;
 
-      // Determinar o modelo e tipo do conteúdo
       if (item.type === 'photo') {
         contentModel = db.Photo;
         contentType = 'photo';
@@ -1122,28 +1142,29 @@ router.post('/share', isAuthenticated, async (req, res) => {
         contentModel = db.Category;
         contentType = 'category';
       } else {
-        console.warn(`Tipo de conteúdo inválido para compartilhamento: ${item.type}`);
+        console.warn(`[POST /share] Tipo de conteúdo inválido para compartilhamento: ${item.type}`);
         validationError = `Tipo de item inválido: ${item.type}`;
       }
 
       if (validationError) {
+          // CORREÇÃO: Retorna JSON para erro de validação de item individual
           shareLinks.push({ id: item.id, type: item.type, error: validationError });
-          continue;
+          // Não continue o loop com 'continue' se quiser falhar todo o pedido
+          // Ou colete todos os erros e retorne no final.
+          // Para este caso, se um item for inválido, vamos considerar um erro geral:
+          return res.status(400).json({ error: `Erro no item ${item.id}: ${validationError}` });
       }
 
-      // 1. Verificar se o item existe e pertence ao usuário (se aplicável)
       const content = await contentModel.findByPk(item.id);
-      // Para fotos/álbuns, verifica se pertence ao owner. Tags/Categorias são globais ou associadas.
       if (!content || (content.userId && content.userId !== ownerId && contentType !== 'tag' && contentType !== 'category')) {
-          console.warn(`Item ${item.type} com ID ${item.id} não encontrado ou não pertence ao usuário ${ownerId}.`);
-          shareLinks.push({ id: item.id, type: item.type, error: 'Item não encontrado ou não autorizado.' });
-          continue; // Pula para o próximo item
+          console.warn(`[POST /share] Item ${item.type} com ID ${item.id} não encontrado ou não pertence ao usuário ${ownerId}.`);
+          // CORREÇÃO: Retorna JSON
+          return res.status(403).json({ error: 'Item não encontrado ou não autorizado para compartilhamento.' });
       }
       
-      // 2. Criar o registro de compartilhamento
       const newShare = await db.Share.create({
         ownerId: ownerId,
-        sharedWithUserId: sharedWithUser ? sharedWithUser.id : null, // ID do usuário com quem compartilhou (se interno)
+        sharedWithUserId: sharedWithUser ? sharedWithUser.id : null,
         contentType: contentType,
         contentId: item.id,
         isPublic: isPublicChecked, 
@@ -1157,16 +1178,14 @@ router.post('/share', isAuthenticated, async (req, res) => {
 
     if (itemsProcessed > 0) {
       if (isPublicChecked) {
-        // Se for link público, retorna os links gerados
+        // Retorna JSON para link público
         return res.status(200).json({ 
           success: 'Links de compartilhamento gerados com sucesso!',
-          shareLink: shareLinks[0].shareLink, // Retorna o primeiro link para o frontend exibir
-          allShareLinks: shareLinks // Retorna todos os links se o frontend precisar de todos
+          shareLink: shareLinks[0].shareLink,
+          allShareLinks: shareLinks
         });
       } else {
-        // Para compartilhamento interno, envia e-mail ao destinatário
         if (sharedWithUser) {
-            // Você pode customizar o e-mail para listar todos os links se for múltiplos itens
             const emailSubject = `[PhotoOrganizer] Conteúdo compartilhado por ${req.user.username}`;
             const emailBody = `
                 <p>Olá ${sharedWithUser.username},</p>
@@ -1185,29 +1204,39 @@ router.post('/share', isAuthenticated, async (req, res) => {
                 subject: emailSubject,
                 html: emailBody,
             });
-            console.log(`E-mail de compartilhamento enviado para ${sharedWithUser.email}`);
+            console.log(`[POST /share] E-mail de compartilhamento enviado para ${sharedWithUser.email}`);
+            // Retorna JSON para sucesso de compartilhamento por e-mail
             return res.status(200).json({ message: 'Conteúdo compartilhado por e-mail com sucesso!' });
         } else {
-            // Este caso não deveria ser atingido se a validação inicial funcionou
+            // CORREÇÃO: Retorna JSON
             return res.status(404).json({ error: 'Usuário destinatário não encontrado para enviar e-mail.' });
         }
       }
     } else {
+        // CORREÇÃO: Retorna JSON
         return res.status(400).json({ error: 'Nenhum item válido foi processado para compartilhamento.' });
     }
 
   } catch (error) {
-    console.error('Erro ao criar compartilhamento:', error);
-    // Tratamento de erros
+    console.error('[POST /share] ERRO FATAL AO CRIAR COMPARTILHAMENTO:', error);
+    console.error('[POST /share] Stack trace do erro:', error.stack);
+
     let errorMessage = 'Ocorreu um erro interno ao compartilhar os itens. Tente novamente.';
+    // ... (restante do tratamento de erro existente, que já retorna JSON) ...
     if (error instanceof multer.MulterError) {
         errorMessage = error.message;
-    } else if (error.message.includes('Apenas arquivos de imagem são permitidos')) { // Erro do fileFilter
+    } else if (error.message.includes('Apenas arquivos de imagem são permitidos')) { 
         errorMessage = error.message;
     } else if (error.name === 'SequelizeValidationError' && error.errors && error.errors.length > 0) {
         errorMessage = error.errors.map(e => e.message).join('; ');
-    } else if (error.code === 'EENVELOPE' || error.code === 'EAUTH') { // Erros comuns do Nodemailer
+    } else if (error.code === 'EENVELOPE' || error.code === 'EAUTH') { 
         errorMessage = 'Erro ao enviar o e-mail de compartilhamento. Verifique sua configuração de e-mail.';
+    } else if (error.name === 'TypeError' && error.message.includes('sendMail is not a function')) {
+        errorMessage = 'Erro de configuração do serviço de e-mail.';
+    } else if (error.name === 'SyntaxError' && error.message.includes('valid JSON')) {
+        errorMessage = 'Erro na formatação dos dados de seleção. Tente novamente.';
+    } else {
+        errorMessage = 'Ocorreu um erro inesperado. Verifique os logs do servidor para mais detalhes.';
     }
 
     res.status(500).json({ error: errorMessage });
