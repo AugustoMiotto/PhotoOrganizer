@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Álbuns - PhotoOrganizer</title>
+    <link rel="stylesheet" href="/stylesheets/dashboard.css">
+    <link rel="stylesheet" href="/stylesheets/my-albums.css">
+</head>
+<body>
+    
+    <header>
+        <div class="container">
+            <h1>PhotoOrganizer</h1>
+            <nav>
+                <ul>
+                    <li><a href="/dashboard">Painel Principal </a></li>
+                    <li><a href="/upload">Enviar Foto</a></li>
+                    <li><a href="/create-album">Criar Álbum</a></li>
+                    <li><a href="/my-albums">Meus Álbuns</a></li>
+                    <li><a href="/profile">Perfil</a></li>
+                    <li><a href="/logout">Sair</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <section class="page-section">
+            <div class="albums-container">
+                <div class="gallery-header">
+                    <h2>Meus Álbuns</h2>
+                    <div class="gallery-controls">
+                        <a href="/create-album" class="btn btn-secondary">Criar Novo Álbum</a>
+                    </div>
+                </div>
+
+                <% if (locals.success) { %>
+                    <div class="message success-message"><%= success %></div>
+                <% } %>
+                <% if (locals.error) { %>
+                    <div class="message error-message"><%= error %></div>
+                <% } %>
+
+                <div class="album-grid">
+                    <% if (albums && albums.length > 0) { %>
+                        <% albums.forEach((album, index) => { %>
+                            <a href="/album/<%= album.id %>" class="album-card-link">
+                                <div class="album-card" style="--card-index: <%= index %>;">
+                                    <div class="pin"></div>
+                                    <div class="album-cover">
+                                        <img src="<%= album.coverImageUrl %>" alt="Capa do álbum <%= album.name %>">
+                                    </div>
+                                    <div class="info">
+                                        <h4><%= album.name %></h4>
+                                        <p class="album-description"><%= album.description %></p>
+                                        <p class="photo-count"><%= album.photoCount %> foto(s)</p>
+                                    </div>
+                                </div>
+                            </a>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="empty-message">
+                            <p>Você ainda não criou nenhum álbum.</p>
+                            <a href="/create-album" class="btn">Crie seu primeiro álbum!</a>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 PhotoOrganizer. Todos os direitos reservados.</p>
+            <a href="/about-us">Sobre os criadores</a>
+        </div>
+    </footer>
+</body>
+</html>
