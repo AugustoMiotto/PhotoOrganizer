@@ -369,6 +369,15 @@ router.get('/logout', function(req, res, next) {
 router.get('/about-us',function(req,res,next){
   res.render('about-us')
 })
+// GET: Rota para exibir o formulário de criação de álbum
+router.get('/create-album', isAuthenticated, (req, res) => {
+    // Renderiza a view, passando possíveis mensagens de erro/sucesso do redirecionamento
+    res.render('create-album', { 
+        user: req.user,
+        error: req.query.error,
+        success: req.query.success 
+    });
+});
 
 // GET foto detalhada
 router.get('/photo/:id', async function(req, res, next) {
@@ -685,5 +694,33 @@ router.post('/upload', isAuthenticated, upload.single('image'), async function(r
     res.redirect('/upload?error=Ocorreu um erro ao enviar a foto. Tente novamente.');
   }
 });
+// POST: Rota para processar a criação do álbum
+router.post('/create-album', isAuthenticated, async (req, res) => {
+    // Pega os dados do corpo do formulário. O nome do input no EJS será 'albumName'.
+    const { albumName, description } = req.body;
+    const userId = req.user.id; // ID do usuário logado
 
+    try {
+        // 1. Validação no Servidor
+        if (!albumName || albumName.trim() === '') {
+            // Redireciona de volta para o formulário com uma mensagem de erro
+            return res.redirect('/create-album?error=O nome do álbum é obrigatório.');
+        }
+
+        // 2. Criação do Álbum no Banco de Dados usando Sequelize
+        await db.Album.create({
+            name: albumName.trim(),
+            description: description ? description.trim() : null,
+            userId: userId
+        });
+        
+        // 3. Redirecionamento para o Dashboard com mensagem de sucesso
+        res.redirect('/dashboard?success=Álbum criado com sucesso!');
+
+    } catch (error) {
+        // Tratamento de erros do banco de dados
+        console.error('Erro ao criar o álbum:', error);
+        res.redirect('/create-album?error=Ocorreu um erro inesperado. Tente novamente.');
+    }
+});
 module.exports = router;

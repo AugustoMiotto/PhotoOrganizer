@@ -1,0 +1,115 @@
+/*
+ * public/stylesheets/create-album.css
+ * Estilos para a página de criação de álbum, inspirados no dashboard.css
+ */
+
+/* Garante que o container ocupe o espaço disponível */
+.create-album-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+/* O card de formulário, estilizado como uma folha de papel afixada */
+.form-card {
+    background: var(--paper-color);
+    padding: 40px;
+    padding-top: 60px; /* Mais espaço no topo para o alfinete */
+    border-radius: 10px;
+    box-shadow: 0 5px 15px var(--shadow-medium);
+    width: 100%;
+    max-width: 650px;
+    position: relative;
+    transform: rotate(1deg); /* Rotação sutil para parecer afixado */
+}
+
+/* Alfinete para o card do formulário */
+.form-card::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: var(--pin-color-2); /* Usando o alfinete azul */
+    z-index: 10;
+}
+
+/* Títulos e textos dentro do card */
+.form-card h1, .form-card p {
+    text-align: center;
+    color: var(--dark-brown);
+}
+
+.form-card h1 {
+    margin-bottom: 10px;
+}
+
+.form-card p {
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+}
+
+/* Reutilização dos estilos de formulário do dashboard */
+.form-card .form-group {
+    margin-bottom: 20px;
+}
+
+.form-card .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: var(--dark-brown);
+}
+
+.form-card .form-group input[type="text"],
+.form-card .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    background-color: #fff; /* Fundo branco para os inputs */
+    box-shadow: inset 0 1px 3px var(--shadow-light);
+    color: var(--dark-brown);
+}
+
+.form-card .form-group textarea {
+    resize: vertical; /* Permite redimensionamento vertical */
+    min-height: 100px;
+}
+
+/* Botões de ação */
+.form-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+/* Mensagens de erro/sucesso */
+.message {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+    border: 1px solid transparent;
+}
+
+.error-message {
+    background-color: #ffcdd2;
+    color: #c62828;
+    border-color: #c62828;
+}
+
+.success-message {
+    background-color: #C8E6C9;
+    color: #2e7d32;
+    border-color: #2e7d32;
+}
