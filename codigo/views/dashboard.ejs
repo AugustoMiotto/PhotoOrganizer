@@ -110,11 +110,15 @@
                     <div class="photo-grid">
                         <% if (typeof photosAndAlbums !== 'undefined' && photosAndAlbums.length > 0) { %>
                             <% photosAndAlbums.forEach((item, index) => { %>
+                                <% let linkUrl = item.type === 'album' ? `/album/${item.id}` : `/photo/${item.id}`; %>
                                 <div class="photo-card <%= item.type === 'album' ? 'album-card' : '' %>" data-id="<%= item.id %>" data-type="<%= item.type %>" style="--card-index: <%= index %>;">
                                     <div class="pin"></div>
-                                    <img src="<%= item.imageUrl %>" alt="<%= item.title %>">
+                                    <a href="<%= linkUrl %>" class="link da foto">
+                                        <img src="<%= item.imageUrl %>" alt="<%= item.title %>">
+                                    </a>
                                     <div class="info">
-                                        <h4><%= item.title %></h4>
+                                        <h4><a href="<%= linkUrl %>"><%= item.title %></a></h4>
+
                                         <p>Descrição: <%= item.description %></p>
                                         <% if (item.type === 'album') { %>
                                             <p>Total de Fotos: <%= item.photoCount %></p>

@@ -57,7 +57,7 @@ passport.deserializeUser(async function(id, done) {
 
 
 // Sincroniza o banco de dados
-db.sequelize.sync({ alter: false}) 
+db.sequelize.sync({ alter: true}) 
   .then(() => {
     console.log('Banco de dados sincronizado com sucesso!');
   })

@@ -370,6 +370,85 @@ router.get('/about-us',function(req,res,next){
   res.render('about-us')
 })
 
+// GET foto detalhada
+router.get('/photo/:id', async function(req, res, next) {
+  try {
+    const photoId = req.params.id;
+    const photo = await db.Photo.findByPk(photoId, {
+      include: [
+        { model: db.User, as: 'user' },
+        { model: db.Tag, as: 'tags' },
+        { model: db.Category, as: 'categories' },
+        { model: db.Album, as: 'albums' }
+      ]
+    });
+    if (!photo) {
+      return res.status(404).send('Foto não encontrada');
+    }
+    res.render('photo', { photo: photo });
+  } catch (error) {
+    console.error('Erro ao carregar detalhes da foto:', error);
+    res.status(500).send('Erro ao carregar detalhes da foto');
+  }
+});
+
+/*GET para editar foto FALTA ARRUMAR
+router.get('/photo/:id/edit', ensureAuth, async (req, res, next) => {
+  try {
+    // Busca a foto apenas do usuário logado
+    const photo = await Photo.findOne({
+      where: { id: req.params.id, userId: req.user.id }
+    });
+
+    if (!photo) {
+      return res.status(404).send('Foto não encontrada');
+    }
+
+    // Se quiser permitir re-alocar em outro álbum
+    const albums = await Album.findAll({
+      where: { userId: req.user.id },
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.render('photo-edit', { photo, albums });
+  } catch (err) {
+    next(err);
+  }
+});
+
+//Rota PUT FALTA ARRUMAR
+router.put('/photo/:id', ensureAuth, async (req, res, next) => {
+  try {
+    const { title, description, location, captureDate, album, tags } = req.body;
+
+    // Encontra a foto e garante que pertence ao usuário
+    const photo = await Photo.findOne({
+      where: { id: req.params.id, userId: req.user.id }
+    });
+
+    if (!photo) {
+      return res.status(404).send('Foto não encontrada');
+    }
+
+    // Atualiza os campos
+    await photo.update({
+      title,
+      description,
+      location,
+      captureDate: captureDate || null,
+      albumId: album === 'Nenhum Álbum' ? null : album,
+      tags: tags
+        .split(',')
+        .map(t => t.trim())
+        .filter(t => t.length > 0)
+    });
+
+    res.redirect(`/photo/${photo.id}`);
+  } catch (err) {
+    next(err);
+  }
+});
+*/
 // --------- ROTAS POST ---------
 
 // POST register page
