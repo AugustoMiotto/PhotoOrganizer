@@ -401,6 +401,53 @@ router.get('/photo/:id', async function(req, res, next) {
   }
 });
 
+// GET - PÁGINA PARA VISUALIZAR APENAS OS ÁLBUNS
+router.get('/my-albums', isAuthenticated, async function(req, res, next) {
+  try {
+    const userId = req.user.id;
+
+    // 1. Busca todos os álbuns do usuário
+    const userAlbums = await db.Album.findAll({
+      where: { userId: userId },
+      // Inclui as fotos associadas para contagem e para a imagem de capa
+      include: [{
+        model: db.Photo,
+        as: 'photos',
+        attributes: ['filepath'], // Pega apenas o caminho da imagem, para otimizar
+        through: { attributes: [] } // Não precisa dos dados da tabela de junção
+      }],
+      order: [['name', 'ASC']] // Ordena os álbuns por nome
+    });
+
+    // 2. Formata os dados para a view
+    const formattedAlbums = userAlbums.map(album => {
+      const photoCount = album.photos ? album.photos.length : 0;
+      // Define uma imagem de capa. Se o álbum tiver fotos, usa a primeira. Senão, um placeholder.
+      const coverImageUrl = photoCount > 0 ? album.photos[0].filepath : 'https://placehold.co/300x200/A07A65/FFF?text=Vazio';
+
+      return {
+        id: album.id,
+        name: album.name,
+        description: album.description || 'Sem descrição',
+        photoCount: photoCount,
+        coverImageUrl: coverImageUrl
+      };
+    });
+
+    // 3. Renderiza a nova página EJS, passando os álbuns formatados
+    res.render('my-albums', {
+      user: req.user,
+      albums: formattedAlbums,
+      error: req.query.error,
+      success: req.query.success
+    });
+
+  } catch (error) {
+    console.error('Erro ao carregar a página de álbuns:', error);
+    res.redirect('/dashboard?error=Não foi possível carregar seus álbuns.');
+  }
+});
+
 /*GET para editar foto FALTA ARRUMAR
 router.get('/photo/:id/edit', ensureAuth, async (req, res, next) => {
   try {

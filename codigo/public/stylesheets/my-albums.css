@@ -1,0 +1,111 @@
+/* public/stylesheets/my-albums.css */
+
+/* Container principal para a página de álbuns */
+.albums-container {
+    width: 100%;
+    max-width: 1200px; /* Limita a largura para telas grandes */
+    margin: 0 auto; /* Centraliza o container */
+    padding: 20px;
+}
+
+/* A grade que segura os cards dos álbuns */
+.album-grid {
+    display: grid;
+    /* Usa o mesmo sistema de colunas responsivas do dashboard */
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 30px;
+    padding-top: 20px;
+}
+
+/* Remove o sublinhado padrão dos links que envolvem os cards */
+.album-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block; /* Garante que o link ocupe todo o espaço do card */
+    transition: transform 0.3s ease;
+}
+
+.album-card-link:hover {
+    transform: translateY(-5px) scale(1.02); /* Efeito de elevação no hover */
+}
+
+/* Estilo do card de álbum, baseado no .photo-card do dashboard */
+.album-card {
+    background: var(--paper-color);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    box-shadow: 0 5px 15px var(--shadow-medium);
+    overflow: hidden;
+    position: relative;
+    padding-top: 10px; /* Espaço para o alfinete */
+    transform: rotate(calc((var(--card-index, 0) * 0.4 - 1.2) * 1deg)); /* Rotação sutil */
+    height: 100%; /* Faz todos os cards terem a mesma altura na linha */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Reutiliza o estilo de alfinete do dashboard.css */
+.album-card .pin {
+    position: absolute;
+    top: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--pin-color-3); /* Usando o alfinete verde para álbuns */
+    z-index: 10;
+}
+
+/* Imagem de capa do álbum */
+.album-cover img {
+    width: 100%;
+    height: 200px; /* Altura fixa para as capas */
+    object-fit: cover;
+    display: block;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Informações do card */
+.album-card .info {
+    padding: 15px;
+    flex-grow: 1; /* Faz esta área crescer para preencher o espaço */
+}
+
+.album-card .info h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+    color: var(--dark-brown);
+}
+
+.album-card .info .album-description {
+    font-size: 0.9rem;
+    color: var(--medium-brown);
+    margin-bottom: 15px;
+    min-height: 40px; /* Garante um espaço mínimo para a descrição */
+}
+
+.album-card .info .photo-count {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--light-brown);
+    text-align: right;
+}
+
+/* Mensagem para quando não há álbuns */
+.empty-message {
+    grid-column: 1 / -1; /* Ocupa todas as colunas da grade */
+    text-align: center;
+    padding: 50px;
+    background: var(--paper-color);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px var(--shadow-light);
+    transform: rotate(-0.5deg);
+}
+
+.empty-message p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    color: var(--dark-brown);
+}
