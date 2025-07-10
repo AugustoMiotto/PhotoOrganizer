@@ -7,6 +7,8 @@ const multer = require('multer');
 const { Op } = require('sequelize');
 const fs = require('fs'); 
 const path = require('path');
+const mailTransporter = require('../config/nodemailer'); // Importe o transporter do Nodemailer
+const { v4: uuidv4 } = require('uuid');
 // --------- CONFIGURAÇÃO DO MULTER ---------
 
 // Define onde os arquivos serão salvos e como serão nomeados
@@ -45,19 +47,53 @@ const upload = multer({
 // --------- Middleware para proteger rotas ---------
 
 function isAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) { // método fornecido pelo Passport
-    return next(); // Se o usuário está logado, continua para a próxima função da rota
+  if (req.isAuthenticated()) { // 1. Verifica se o usuário está logado
+    if (req.user.isVerified) { // 2. Se logado, verifica se o e-mail está verificado
+      return next(); // Permite o acesso
+    } else {
+      return res.redirect('/login?error=' + encodeURIComponent('Sua conta precisa ser verificada por e-mail para acessar este recurso. Por favor, verifique sua caixa de entrada (e spam).'));
+    }
+  } else {
+    // 4. Se não estiver logado, redireciona para o login com mensagem padrão
+    res.redirect('/login?error=' + encodeURIComponent('Você precisa estar logado para acessar esta página.'));
   }
-  // Se não estiver logado, redireciona para a página de login com uma mensagem de erro
-  res.redirect('/login?error=Você precisa estar logado para acessar esta página.');
 }
-
 
 // --------- ROTAS GET ---------
 
 // GET register page
 router.get('/register', function(req, res, next) {
-  res.render('register', { error: req.query.error, success: req.query.success });
+  res.render('register', {
+    error: req.query.error,
+    success: req.query.success,
+    needsVerification: req.query.needsVerification === 'true', // Nova flag
+    emailForVerification: req.query.email 
+  });
+});
+
+// --- NOVA ROTA: GET para verificação de e-mail ---
+router.get('/verify-email/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const user = await db.User.findOne({ where: { verificationToken: token } });
+
+    if (!user) {
+      return res.redirect('/login?error=' + encodeURIComponent('Link de verificação inválido ou expirado.'));
+    }
+    if (user.isVerified) {
+      return res.redirect('/login?success=' + encodeURIComponent('Seu e-mail já foi verificado! Por favor, faça login.'));
+    }
+
+    // Ativa a conta do usuário
+    await user.update({ isVerified: true, verificationToken: null });
+
+    res.redirect('/login?success=' + encodeURIComponent('Seu e-mail foi verificado com sucesso! Agora você pode fazer login.'));
+
+  } catch (error) {
+    console.error('Erro na verificação de e-mail:', error);
+    res.redirect('/login?error=' + encodeURIComponent('Ocorreu um erro ao verificar seu e-mail. Tente novamente.'));
+  }
 });
 
 // GET login page
@@ -74,6 +110,38 @@ router.get('/', function(req, res, next) {
   }
   res.redirect('/login'); 
 });
+
+// GET Solicitar redefinição de senha 
+router.get('/forgot-password', function(req, res) {
+  res.render('forgot-password', { error: req.query.error, success: req.query.success });
+});
+
+// GET Validar token e exibir formulário de nova senha 
+router.get('/reset-password/:token', async function(req, res) {
+  const { token } = req.params;
+
+  try {
+    const user = await db.User.findOne({
+      where: {
+        passwordResetToken: token,
+        passwordResetExpires: { [Op.gt]: new Date() } // Token não pode estar expirado
+      }
+    });
+
+    if (!user) {
+      // Token inválido ou expirado
+      return res.render('reset-password', { tokenValid: false, error: 'O link de redefinição é inválido ou expirou.' });
+    }
+
+    // Token válido, renderiza o formulário para a nova senha
+    res.render('reset-password', { tokenValid: true, token: token, error: null, success: null });
+
+  } catch (error) {
+    console.error('Erro ao validar token de redefinição de senha:', error);
+    res.render('reset-password', { tokenValid: false, error: 'Ocorreu um erro ao validar o link de redefinição.' });
+  }
+});
+
 
 // GET dashboard 
 router.get('/dashboard', isAuthenticated, async function(req, res, next) {
@@ -383,21 +451,35 @@ router.get('/create-album', isAuthenticated, (req, res) => {
 router.get('/photo/:id', async function(req, res, next) {
   try {
     const photoId = req.params.id;
+    // req.user.id pode ser usado para garantir que o usuário só veja suas próprias fotos
+    // const userId = req.user.id; // Descomente e adicione ao where se quiser proteger a rota
+    
     const photo = await db.Photo.findByPk(photoId, {
+      // where: { id: photoId, userId: userId }, // Adicione esta linha se descomentou o userId
       include: [
-        { model: db.User, as: 'user' },
-        { model: db.Tag, as: 'tags' },
-        { model: db.Category, as: 'categories' },
-        { model: db.Album, as: 'albums' }
+        { model: db.User, as: 'user', attributes: ['username'] }, // Pega apenas o username do user
+        { model: db.Tag, as: 'tags', attributes: ['name'], through: { attributes: [] } },
+        { model: db.Category, as: 'categories', attributes: ['name'], through: { attributes: [] } },
+        { model: db.Album, as: 'albums', attributes: ['name'], through: { attributes: [] } }
       ]
     });
+
     if (!photo) {
       return res.status(404).send('Foto não encontrada');
     }
+
+    // Se você não quer que o usuário veja fotos de outros usuários diretamente pela URL,
+    // adicione uma verificação aqui, mesmo que não proteja com isAuthenticated.
+    // if (photo.userId !== req.user.id) {
+    //   return res.status(403).send('Você não tem permissão para visualizar esta foto.');
+    // }
+
     res.render('photo', { photo: photo });
   } catch (error) {
     console.error('Erro ao carregar detalhes da foto:', error);
-    res.status(500).send('Erro ao carregar detalhes da foto');
+    // Para depuração, você pode enviar o erro para o cliente temporariamente
+    // res.status(500).send(`Erro ao carregar detalhes da foto: ${error.message}`);
+    res.status(500).send('Erro ao carregar detalhes da foto. Tente novamente.');
   }
 });
 
@@ -458,6 +540,130 @@ router.put('/photo/:id', ensureAuth, async (req, res, next) => {
   }
 });
 */
+
+
+// ROTA GET para acessar conteúdo compartilhado via token 
+router.get('/share/:shareToken', async (req, res) => {
+  try {
+    const { shareToken } = req.params;
+
+    const shareRecord = await db.Share.findOne({
+      where: { shareToken: shareToken },
+      include: [
+        { model: db.User, as: 'owner', attributes: ['username'] },
+        { model: db.User, as: 'sharedWith', attributes: ['username', 'email'] }
+      ]
+    });
+
+    if (!shareRecord) {
+      return res.status(404).send('Link de compartilhamento inválido ou expirado.');
+    }
+
+    // 1. Verificar expiração
+    if (shareRecord.expiresAt && new Date() > shareRecord.expiresAt) {
+      return res.status(403).send('Este link de compartilhamento expirou.');
+    }
+
+    // 2. Verificar permissão de acesso (se não for público)
+    if (!shareRecord.isPublic) {
+      if (!req.isAuthenticated()) {
+        // Redireciona para login se não for público e o usuário não estiver logado
+        return res.redirect(`/login?error=${encodeURIComponent('Você precisa estar logado para acessar este conteúdo compartilhado.')}`);
+      }
+      // Se está logado, verifica se foi compartilhado com ele ou se ele é o dono
+      if (req.user.id !== shareRecord.ownerId && req.user.id !== shareRecord.sharedWithUserId) {
+        return res.status(403).send('Você não tem permissão para visualizar este conteúdo. Ele foi compartilhado com outro usuário.');
+      }
+    }
+
+    // 3. Buscar o conteúdo real (foto, álbum, tag, categoria)
+    let content = null;
+    let viewToRender = 'shared-content'; // Template genérico ou ajuste conforme o tipo
+    let templateData = { 
+        shareRecord: shareRecord,
+        ownerUsername: shareRecord.owner ? shareRecord.owner.username : 'desconhecido'
+    };
+
+    if (shareRecord.contentType === 'photo') {
+      content = await db.Photo.findByPk(shareRecord.contentId, {
+        include: [
+          { model: db.User, as: 'user', attributes: ['username'] },
+          { model: db.Tag, as: 'tags', attributes: ['name'], through: { attributes: [] } },
+          { model: db.Category, as: 'categories', attributes: ['name'], through: { attributes: [] } },
+          { model: db.Album, as: 'albums', attributes: ['name'], through: { attributes: [] } }
+        ]
+      });
+      viewToRender = 'photo'; // Reutiliza seu template de foto para uma única foto compartilhada
+      templateData.photo = content; // Passa a foto como 'photo' para o EJS
+      templateData.isSharedView = true; // Flag para o EJS saber que é uma view compartilhada
+    } else if (shareRecord.contentType === 'album') {
+      content = await db.Album.findByPk(shareRecord.contentId, {
+        include: [{ 
+            model: db.Photo, 
+            as: 'photos', 
+            include: [{ model: db.Tag, as: 'tags', attributes: ['name'], through: { attributes: [] }}] // Inclui tags das fotos do álbum
+        }],
+        order: [[db.Photo, 'uploadDate', 'DESC']] // Ordena as fotos dentro do álbum
+      });
+      viewToRender = 'shared-album'; // Você precisaria criar este template para um álbum compartilhado
+      templateData.album = content;
+      templateData.isSharedView = true;
+    } else if (shareRecord.contentType === 'tag') {
+        const tagContent = await db.Tag.findByPk(shareRecord.contentId);
+        if (tagContent) {
+            content = await db.Photo.findAll({
+                include: [{
+                    model: db.Tag,
+                    as: 'tags',
+                    where: { id: tagContent.id },
+                    attributes: [],
+                    through: { attributes: [] },
+                    required: true
+                }, { model: db.User, as: 'user', attributes: ['username'] }],
+                where: { userId: shareRecord.ownerId || { [Op.ne]: null } }, // Opcional: filtrar por fotos do owner ou todas
+                order: [['uploadDate', 'DESC']]
+            });
+            viewToRender = 'shared-tag-category'; // Template para exibir várias fotos por tag/categoria
+            templateData.tag = tagContent;
+            templateData.photos = content;
+            templateData.isSharedView = true;
+        }
+    } else if (shareRecord.contentType === 'category') {
+        const categoryContent = await db.Category.findByPk(shareRecord.contentId);
+        if (categoryContent) {
+            content = await db.Photo.findAll({
+                include: [{
+                    model: db.Category,
+                    as: 'categories',
+                    where: { id: categoryContent.id },
+                    attributes: [],
+                    through: { attributes: [] },
+                    required: true
+                }, { model: db.User, as: 'user', attributes: ['username'] }],
+                where: { userId: shareRecord.ownerId || { [Op.ne]: null } }, // Opcional: filtrar por fotos do owner ou todas
+                order: [['uploadDate', 'DESC']]
+            });
+            viewToRender = 'shared-tag-category'; // Reutiliza
+            templateData.category = categoryContent;
+            templateData.photos = content;
+            templateData.isSharedView = true;
+        }
+    }
+
+    if (!content) {
+      return res.status(404).send('Conteúdo compartilhado não encontrado ou não disponível.');
+    }
+
+    // Renderiza o template apropriado com os dados do conteúdo
+    res.render(viewToRender, templateData);
+
+  } catch (error) {
+    console.error('Erro ao acessar conteúdo compartilhado:', error);
+    res.status(500).send('Ocorreu um erro ao carregar o conteúdo compartilhado. Tente novamente.');
+  }
+});
+
+
 // --------- ROTAS POST ---------
 
 // POST register page
@@ -467,41 +673,59 @@ router.post('/register', async function(req, res, next) {
   try {
     // 1. Validação básica (campos vazios)
     if (!username || !email || !password) {
-      return res.redirect('/register?error=Por favor, preencha todos os campos.');
+      return res.redirect('/register?error=' + encodeURIComponent('Por favor, preencha todos os campos.'));
     }
 
     // 2. Verificar se o e-mail já existe
     const existingEmail = await db.User.findOne({ where: { email: email } });
     if (existingEmail) {
-      return res.redirect('/register?error=Este e-mail já está em uso.');
+      return res.redirect('/register?error=' + encodeURIComponent('Este e-mail já está em uso.'));
     }
 
     // 3. Verificar se o nome de usuário já existe
     const existingUsername = await db.User.findOne({ where: { username: username } });
     if (existingUsername) {
-        return res.redirect('/register?error=Este nome de usuário já está em uso.');
+      return res.redirect('/register?error=' + encodeURIComponent('Este nome de usuário já está em uso.'));
     }
 
     // 4. Criar o novo usuário (a senha será hashed automaticamente pelo hook do modelo)
+    // isVerified será false por padrão, verificationToken será gerado automaticamente
     const newUser = await db.User.create({
       username,
       email,
-      password
+      password,
+      isVerified: false // Garante que o usuário não está verificado inicialmente
     });
 
-    // 5. Autenticar o usuário recém-criado e iniciar a sessão
-    req.login(newUser, function(err) {
-      if (err) {
-        console.error('Erro ao fazer login após o registro:', err);
-        return next(err);
-      }
-      // Redireciona para o dashboard após o registro E login bem-sucedido
-      return res.redirect('/dashboard?success=Registro realizado com sucesso e login efetuado!');
+    // 5. Enviar e-mail de verificação
+    const verificationLink = `${req.protocol}://${req.get('host')}/verify-email/${newUser.verificationToken}`;
+    
+    await mailTransporter.sendMail({
+      from: process.env.EMAIL_USER, // Seu e-mail configurado no .env
+      to: newUser.email,
+      subject: 'Verifique seu e-mail para o PhotoOrganizer',
+      html: `
+        <p>Olá ${newUser.username},</p>
+        <p>Obrigado por se registrar no PhotoOrganizer!</p>
+        <p>Por favor, clique no link abaixo para verificar seu e-mail e ativar sua conta:</p>
+        <p><a href="${verificationLink}">${verificationLink}</a></p>
+        <p>Este link expira em 24 horas.</p>
+        <p>Atenciosamente,<br/>A Equipe PhotoOrganizer</p>
+      `,
     });
+
+    console.log(`E-mail de verificação enviado para ${newUser.email}`);
+    // Redireciona para uma página informando que o e-mail de verificação foi enviado
+    return res.redirect('/register?needsVerification=true&email=' + encodeURIComponent(newUser.email));
 
   } catch (error) {
-    console.error('Erro no registro do usuário:', error);
-    return res.redirect('/register?error=Ocorreu um erro ao registrar. Tente novamente.');
+    console.error('Erro no registro do usuário ou envio de e-mail:', error);
+    // Para erros de Nodemailer, pode ser mais específico
+    let errorMessage = 'Ocorreu um erro ao registrar. Tente novamente.';
+    if (error.code === 'EENVELOPE' || error.code === 'EAUTH') { // Exemplo de erros comuns do Nodemailer
+        errorMessage = 'Erro ao enviar o e-mail de verificação. Verifique sua configuração de e-mail.';
+    }
+    return res.redirect('/register?error=' + encodeURIComponent(errorMessage));
   }
 });
 
@@ -512,25 +736,110 @@ router.post('/login', passport.authenticate('local', {
   failureFlash: false
 }));
 
+// POST Enviar e-mail de redefinição de senha
+router.post('/forgot-password', async function(req, res, next) {
+  const { email } = req.body;
+
+  try {
+    if (!email) {
+      return res.redirect('/forgot-password?error=' + encodeURIComponent('Por favor, informe seu e-mail.'));
+    }
+
+    const user = await db.User.findOne({ where: { email: email } });
+    if (!user) {
+      // Para segurança, sempre retorne uma mensagem genérica para não vazar se o e-mail existe
+      console.log(`Tentativa de redefinição de senha para e-mail não encontrado: ${email}`);
+      return res.redirect('/forgot-password?success=' + encodeURIComponent('Se o e-mail estiver registrado, você receberá um link de redefinição de senha.'));
+    }
+    
+    // 1. Gerar um token único e definir expiração (ex: 1 hora)
+    const resetToken = uuidv4();
+    const resetExpires = new Date(Date.now() + 3600000); // Token válido por 1 hora
+
+    await user.update({
+      passwordResetToken: resetToken,
+      passwordResetExpires: resetExpires,
+    });
+
+    // 2. Enviar e-mail com o link de redefinição
+    const resetLink = `${req.protocol}://${req.get('host')}/reset-password/${resetToken}`;
+
+    await mailTransporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: 'Redefinição de Senha do PhotoOrganizer',
+      html: `
+        <p>Olá ${user.username},</p>
+        <p>Você solicitou a redefinição da sua senha no PhotoOrganizer.</p>
+        <p>Por favor, clique no link abaixo para redefinir sua senha:</p>
+        <p><a href="${resetLink}">${resetLink}</a></p>
+        <p>Este link é válido por 1 hora.</p>
+        <p>Se você não solicitou esta redefinição, por favor, ignore este e-mail.</p>
+        <p>Atenciosamente,<br/>A Equipe PhotoOrganizer</p>
+      `,
+    });
+
+    console.log(`E-mail de redefinição de senha enviado para ${user.email}`);
+    res.redirect('/forgot-password?success=' + encodeURIComponent('Se o e-mail estiver registrado, você receberá um link de redefinição de senha.'));
+
+  } catch (error) {
+    console.error('Erro ao solicitar redefinição de senha:', error);
+    res.redirect('/forgot-password?error=' + encodeURIComponent('Ocorreu um erro ao processar sua solicitação. Tente novamente.'));
+  }
+});
+
+// POST Redefinir a senha 
+router.post('/reset-password/:token', async function(req, res) {
+  const { token } = req.params;
+  const { password, confirm_password } = req.body;
+
+  try {
+    // 1. Validar senhas
+    if (!password || password.length < 6) {
+      return res.redirect(`/reset-password/${token}?error=${encodeURIComponent('A senha deve ter no mínimo 6 caracteres.')}`);
+    }
+    if (password !== confirm_password) {
+      return res.redirect(`/reset-password/${token}?error=${encodeURIComponent('As senhas não coincidem.')}`);
+    }
+
+    // 2. Encontrar o usuário pelo token (e verificar expiração novamente)
+    const user = await db.User.findOne({
+      where: {
+        passwordResetToken: token,
+        passwordResetExpires: { [Op.gt]: new Date() }
+      }
+    });
+
+    if (!user) {
+      return res.redirect(`/reset-password/${token}?error=${encodeURIComponent('O link de redefinição é inválido ou expirou. Por favor, solicite um novo.')}`);
+    }
+
+    // 3. Atualizar a senha e invalidar o token
+    // O hook beforeUpdate do seu modelo User fará o hash da nova senha
+    await user.update({
+      password: password,
+      passwordResetToken: null, // Invalida o token
+      passwordResetExpires: null, // Remove a expiração
+    });
+
+    console.log(`Senha redefinida com sucesso para o usuário: ${user.username}`);
+    res.redirect('/login?success=' + encodeURIComponent('Sua senha foi redefinida com sucesso! Por favor, faça login com sua nova senha.'));
+
+  } catch (error) {
+    console.error('Erro ao redefinir a senha:', error);
+    res.redirect(`/reset-password/${token}?error=${encodeURIComponent('Ocorreu um erro ao redefinir sua senha. Tente novamente.')}`);
+  }
+});
+
 //POST: /profile/edit 
 // avatarUpload.single('new_avatar_file') para processar o upload do arquivo de avatar, se houver.
 router.post('/profile/edit', isAuthenticated, avatarUpload.single('new_avatar_file'), async function(req, res, next) {
   try {
-    console.log('[POST /profile/edit] -- INÍCIO DA ROTA --');
-    console.log('[POST /profile/edit] Conteúdo COMPLETO do req.body:', JSON.stringify(req.body, null, 2)); // Log completo
-    console.log('[POST /profile/edit] req.file (se houver):', req.file);
-
     const user = req.user;
     const { username, bio, avatar_source, existing_photo_id } = req.body;
     let newAvatarUrl = user.avatarUrl;
 
-    console.log(`[POST /profile/edit] Valor de 'username' desestruturado: '${username}'`);
-    console.log(`[POST /profile/edit] Tipo de 'username': ${typeof username}`);
-    console.log(`[POST /profile/edit] 'username' é null/undefined? ${!username}`);
-    console.log(`[POST /profile/edit] 'username' é string vazia ou só espaços? ${username && username.trim() === ''}`);
-
     if (!username || username.trim() === '') {
-      console.log('[POST /profile/edit] === VALIDAÇÃO FALHOU: Nome de usuário vazio ou apenas espaços ===');
       return res.redirect('/profile/edit?error=O nome de usuário não pode estar vazio.');
     }
     console.log('[POST /profile/edit] Validação de username BEM SUCEDIDA.'); // Este log deve aparecer se passar
@@ -543,7 +852,6 @@ router.post('/profile/edit', isAuthenticated, avatarUpload.single('new_avatar_fi
     // --- Lógica para determinar a nova URL do avatar ---
     if (avatar_source === 'existing') {
         if (!existing_photo_id) {
-            console.log('[POST /profile/edit] Avatar Source: Existing, mas nenhum ID de foto selecionado.');
             return res.redirect('/profile/edit?error=Selecione uma foto existente para o avatar.');
         }
         const selectedPhoto = await db.Photo.findOne({
@@ -554,24 +862,17 @@ router.post('/profile/edit', isAuthenticated, avatarUpload.single('new_avatar_fi
             newAvatarUrl = selectedPhoto.filepath;
             console.log('[POST /profile/edit] Avatar atualizado para foto existente:', newAvatarUrl);
         } else {
-            console.log('[POST /profile/edit] Avatar Source: Existing, foto inválida.');
             return res.redirect('/profile/edit?error=Foto existente selecionada inválida.');
         }
     } else if (avatar_source === 'upload') {
         if (!req.file) { // Se esta condição for verdadeira, o Multer não processou o arquivo
-            console.log('[POST /profile/edit] Avatar Source: Upload, mas nenhum arquivo enviado (req.file vazio).');
-            // Isso pode acontecer se o campo não era requerido e o usuário não selecionou.
-            // Se o Multer for configurado para 'required', ele já teria gerado um erro antes.
             return res.redirect('/profile/edit?error=Nenhum arquivo de avatar foi enviado para upload.');
         }
         newAvatarUrl = '/uploads/avatars/' + req.file.filename;
-        console.log('[POST /profile/edit] Avatar atualizado para novo upload:', newAvatarUrl);
     } else if (avatar_source === 'current') {
-        console.log('[POST /profile/edit] Avatar Source: Current. Mantendo avatar atual.');
         // Nada a fazer, newAvatarUrl já tem o valor atual
     } else {
         // Cenário para onde nenhum radio foi selecionado, ou valor inválido
-        console.log('[POST /profile/edit] Avatar Source: Não especificado ou inválido. Mantendo avatar atual.');
         newAvatarUrl = user.avatarUrl; // Garante que mantém o avatar atual se a opção for inválida
     }
 
@@ -595,7 +896,7 @@ router.post('/profile/edit', isAuthenticated, avatarUpload.single('new_avatar_fi
       avatarUrl: newAvatarUrl,
     });
 
-    console.log('[POST /profile/edit] Perfil atualizado com sucesso para:', user.username);
+    
     res.redirect('/profile?success=Perfil atualizado com sucesso!');
 
   } catch (error) {
@@ -723,4 +1024,148 @@ router.post('/create-album', isAuthenticated, async (req, res) => {
         res.redirect('/create-album?error=Ocorreu um erro inesperado. Tente novamente.');
     }
 });
+
+// ROTA POST SHARE 
+router.post('/share', isAuthenticated, async (req, res) => {
+  try {
+    const ownerId = req.user.id;
+    const { selectedItems, recipientEmail, isPublic, expiresAt } = req.body; // Campos do formulário
+    const parsedSelectedItems = JSON.parse(selectedItems); // Array de {id: '...', type: '...'}
+
+    if (!parsedSelectedItems || parsedSelectedItems.length === 0) {
+      return res.status(400).json({ error: 'Nenhum item selecionado para compartilhar.' });
+    }
+
+    // Validação básica de campos
+    const isPublicChecked = isPublic === 'on' || isPublic === true; // Checa se é 'on' (do checkbox) ou booleano
+    const trimmedRecipientEmail = recipientEmail ? recipientEmail.trim() : '';
+
+    if (!isPublicChecked && !trimmedRecipientEmail) {
+        return res.status(400).json({ error: 'Para compartilhamento interno, o e-mail do destinatário é obrigatório.' });
+    }
+
+    let sharedWithUser = null;
+    if (trimmedRecipientEmail && !isPublicChecked) {
+        // Encontrar o sharedWithUser se for compartilhamento interno
+        sharedWithUser = await db.User.findOne({ where: { email: trimmedRecipientEmail } });
+        if (!sharedWithUser) {
+            return res.status(404).json({ error: 'Usuário destinatário não encontrado para compartilhamento interno.' });
+        }
+    }
+
+    let shareLinks = []; // Para armazenar links gerados
+    let itemsProcessed = 0;
+
+    for (const item of parsedSelectedItems) {
+      let contentModel;
+      let contentType;
+      let validationError = null;
+
+      // Determinar o modelo e tipo do conteúdo
+      if (item.type === 'photo') {
+        contentModel = db.Photo;
+        contentType = 'photo';
+      } else if (item.type === 'album') {
+        contentModel = db.Album;
+        contentType = 'album';
+      } else if (item.type === 'tag') { 
+        contentModel = db.Tag;
+        contentType = 'tag';
+      } else if (item.type === 'category') { 
+        contentModel = db.Category;
+        contentType = 'category';
+      } else {
+        console.warn(`Tipo de conteúdo inválido para compartilhamento: ${item.type}`);
+        validationError = `Tipo de item inválido: ${item.type}`;
+      }
+
+      if (validationError) {
+          shareLinks.push({ id: item.id, type: item.type, error: validationError });
+          continue;
+      }
+
+      // 1. Verificar se o item existe e pertence ao usuário (se aplicável)
+      const content = await contentModel.findByPk(item.id);
+      // Para fotos/álbuns, verifica se pertence ao owner. Tags/Categorias são globais ou associadas.
+      if (!content || (content.userId && content.userId !== ownerId && contentType !== 'tag' && contentType !== 'category')) {
+          console.warn(`Item ${item.type} com ID ${item.id} não encontrado ou não pertence ao usuário ${ownerId}.`);
+          shareLinks.push({ id: item.id, type: item.type, error: 'Item não encontrado ou não autorizado.' });
+          continue; // Pula para o próximo item
+      }
+      
+      // 2. Criar o registro de compartilhamento
+      const newShare = await db.Share.create({
+        ownerId: ownerId,
+        sharedWithUserId: sharedWithUser ? sharedWithUser.id : null, // ID do usuário com quem compartilhou (se interno)
+        contentType: contentType,
+        contentId: item.id,
+        isPublic: isPublicChecked, 
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+      });
+
+      const shareLink = `${req.protocol}://${req.get('host')}/share/${newShare.shareToken}`;
+      shareLinks.push({ id: item.id, type: item.type, shareLink: shareLink, token: newShare.shareToken });
+      itemsProcessed++;
+    }
+
+    if (itemsProcessed > 0) {
+      if (isPublicChecked) {
+        // Se for link público, retorna os links gerados
+        return res.status(200).json({ 
+          success: 'Links de compartilhamento gerados com sucesso!',
+          shareLink: shareLinks[0].shareLink, // Retorna o primeiro link para o frontend exibir
+          allShareLinks: shareLinks // Retorna todos os links se o frontend precisar de todos
+        });
+      } else {
+        // Para compartilhamento interno, envia e-mail ao destinatário
+        if (sharedWithUser) {
+            // Você pode customizar o e-mail para listar todos os links se for múltiplos itens
+            const emailSubject = `[PhotoOrganizer] Conteúdo compartilhado por ${req.user.username}`;
+            const emailBody = `
+                <p>Olá ${sharedWithUser.username},</p>
+                <p>Você recebeu conteúdo compartilhado de ${req.user.username} no PhotoOrganizer.</p>
+                <p>Clique nos links abaixo para visualizar:</p>
+                <ul>
+                    ${shareLinks.map(link => `<li><a href="${link.shareLink}">${link.shareLink}</a></li>`).join('')}
+                </ul>
+                <p>Estes links são privados e podem expirar. Você precisa estar logado na sua conta PhotoOrganizer para acessá-los.</p>
+                <p>Atenciosamente,<br/>A Equipe PhotoOrganizer</p>
+            `;
+
+            await mailTransporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: sharedWithUser.email,
+                subject: emailSubject,
+                html: emailBody,
+            });
+            console.log(`E-mail de compartilhamento enviado para ${sharedWithUser.email}`);
+            return res.status(200).json({ message: 'Conteúdo compartilhado por e-mail com sucesso!' });
+        } else {
+            // Este caso não deveria ser atingido se a validação inicial funcionou
+            return res.status(404).json({ error: 'Usuário destinatário não encontrado para enviar e-mail.' });
+        }
+      }
+    } else {
+        return res.status(400).json({ error: 'Nenhum item válido foi processado para compartilhamento.' });
+    }
+
+  } catch (error) {
+    console.error('Erro ao criar compartilhamento:', error);
+    // Tratamento de erros
+    let errorMessage = 'Ocorreu um erro interno ao compartilhar os itens. Tente novamente.';
+    if (error instanceof multer.MulterError) {
+        errorMessage = error.message;
+    } else if (error.message.includes('Apenas arquivos de imagem são permitidos')) { // Erro do fileFilter
+        errorMessage = error.message;
+    } else if (error.name === 'SequelizeValidationError' && error.errors && error.errors.length > 0) {
+        errorMessage = error.errors.map(e => e.message).join('; ');
+    } else if (error.code === 'EENVELOPE' || error.code === 'EAUTH') { // Erros comuns do Nodemailer
+        errorMessage = 'Erro ao enviar o e-mail de compartilhamento. Verifique sua configuração de e-mail.';
+    }
+
+    res.status(500).json({ error: errorMessage });
+  }
+});
+
+
 module.exports = router;

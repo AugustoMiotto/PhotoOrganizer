@@ -4,15 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/stylesheets/photo.css" />
-  <title><%= photo.title %> - Detalhes da Foto</title>
-</head>
+  <title><%= photo.title || photo.filename %> - Detalhes da Foto</title> </head>
 <body>
   <div class="container">
     <a href="/dashboard">Voltar para a Galeria</a>
 
     <div class="photo-display">
-      <h1><%= photo.title %></h1>
-      <img src="<%= photo.url %>" alt="<%= photo.title %>">
+      <h1><%= photo.title || photo.filename %></h1> <img src="<%= photo.filepath %>" alt="<%= photo.title || photo.filename %>">
     </div>
 
     <div class="photo-info">
@@ -22,7 +20,15 @@
       <h2>Detalhes</h2>
       <ul>
         <li><strong>Enviada por:</strong> <%= photo.user ? photo.user.username : 'Usuário desconhecido' %></li>
-        <li><strong>Data da Captura:</strong> <%= new Date(photo.captureDate).toLocaleDateString('pt-BR') %></li>
+        <li><strong>Data da Captura:</strong> <%= photo.captureDate ? new Date(photo.captureDate).toLocaleDateString('pt-BR') : 'Não informada' %></li>
+        
+        <% if (photo.location) { %>
+          <li><strong>Local:</strong> <%= photo.location %></li>
+        <% } %>
+        <% if (photo.equipment) { %>
+          <li><strong>Equipamento:</strong> <%= photo.equipment %></li>
+        <% } %>
+
         <% if (photo.categories && photo.categories.length) { %>
           <li><strong>Categorias:</strong>
             <% photo.categories.forEach(cat => { %>
@@ -30,15 +36,29 @@
             <% }) %>
           </li>
         <% } %>
+        
+        <% if (photo.tags && photo.tags.length) { %>
+          <li><strong>Tags:</strong>
+            <% photo.tags.forEach(tag => { %>
+              <span>#<%= tag.name %></span>
+            <% }) %>
+          </li>
+        <% } %>
+
+        <% if (photo.albums && photo.albums.length) { %>
+          <li><strong>Álbuns:</strong>
+            <% photo.albums.forEach(album => { %>
+              <span><%= album.name %></span>
+            <% }) %>
+          </li>
+        <% } %>
       </ul>
     </div>
 
-    <!-- Botões para futuras ações de edição e exclusão -->
     <div class="photo-actions">
       <a href="/photo/<%= photo.id %>/edit" class="btn btn-edit">Editar</a>
       
-      <!-- A exclusão é melhor feita com um formulário para usar o método POST/DELETE -->
-      <form action="/photo/<%= photo.id %>?_method=DELETE" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir esta foto?');">
+      <form action="/photo/<%= photo.id %>?_method=DELETE" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir esta foto? Esta ação é irreversível.');">
         <button type="submit" class="btn btn-delete">Excluir</button>
       </form>
     </div>

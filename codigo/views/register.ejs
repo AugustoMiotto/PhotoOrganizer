@@ -15,7 +15,11 @@
         <% if (locals.success) { %>
             <p style="color: green; text-align: center;"><%= success %></p>
         <% } %>
-
+             <% if (locals.needsVerification) { %>
+            <p style="color: blue; text-align: center;">
+                Uma mensagem de verificação foi enviada para <strong><%= locals.emailForVerification || 'seu e-mail' %></strong>. Por favor, verifique sua caixa de entrada (e spam) para ativar sua conta.
+            </p>
+        <% } %>
         <form action="/register" method="POST">
             <div class="form-group">
                 <label for="username">Nome de Usuário:</label>

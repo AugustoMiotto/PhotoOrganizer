@@ -18,7 +18,6 @@ const db = require('./models');
 
 
 //  Configuração do Passport.js 
-
 // Configuração da estratégia local
 passport.use(new LocalStrategy(
   { usernameField: 'username' }, // O campo que será usado como "username" no seu formulário de login (pode ser username ou email)
@@ -54,10 +53,8 @@ passport.deserializeUser(async function(id, done) {
   }
 });
 
-
-
 // Sincroniza o banco de dados
-db.sequelize.sync({ alter: true}) 
+db.sequelize.sync({ force: false}) 
   .then(() => {
     console.log('Banco de dados sincronizado com sucesso!');
   })

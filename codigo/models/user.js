@@ -1,8 +1,21 @@
 // models/user.js
 const bcrypt = require('bcryptjs'); 
+const { v4: uuidv4 } = require('uuid'); // Para gerar tokens UUID
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
+
+    isVerified: { // Novo campo: true se o e-mail foi verificado
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+    },
+    verificationToken: { // Novo campo: Token para verificação de e-mail
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4, // Gera um UUID automaticamente
+      unique: true, // Garante que o token é único
+      allowNull: true, // Pode ser nulo após verificação
+    },
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
@@ -24,6 +37,15 @@ module.exports = (sequelize, DataTypes) => {
     password: { // Armazenará o hash da senha
       type: DataTypes.STRING,
       allowNull: false,
+    }, 
+    passwordResetToken: {
+      type: DataTypes.STRING, // String para tokens (UUID ou similar)
+      allowNull: true, // Pode ser nulo se não houver token ativo
+      unique: true, // Garante que o token é único
+    },
+    passwordResetExpires: {
+      type: DataTypes.DATE, // Data/hora de expiração do token
+      allowNull: true, // Pode ser nulo
     },
      bio: {
       type: DataTypes.TEXT,

@@ -108,33 +108,38 @@
                     <% } %>
 
                     <div class="photo-grid">
-                        <% if (typeof photosAndAlbums !== 'undefined' && photosAndAlbums.length > 0) { %>
-                            <% photosAndAlbums.forEach((item, index) => { %>
-                                <% let linkUrl = item.type === 'album' ? `/album/${item.id}` : `/photo/${item.id}`; %>
-                                <div class="photo-card <%= item.type === 'album' ? 'album-card' : '' %>" data-id="<%= item.id %>" data-type="<%= item.type %>" style="--card-index: <%= index %>;">
-                                    <div class="pin"></div>
-                                    <a href="<%= linkUrl %>" class="link da foto">
-                                        <img src="<%= item.imageUrl %>" alt="<%= item.title %>">
-                                    </a>
-                                    <div class="info">
-                                        <h4><a href="<%= linkUrl %>"><%= item.title %></a></h4>
+    <% if (typeof photosAndAlbums !== 'undefined' && photosAndAlbums.length > 0) { %>
+        <% photosAndAlbums.forEach((item, index) => { %>
+            <% let linkUrl = item.type === 'album' ? `/album/${item.id}` : `/photo/${item.id}`; %>
+                    <div class="photo-card <%= item.type === 'album' ? 'album-card' : '' %>" data-id="<%= item.id %>" data-type="<%= item.type %>" style="--card-index: <%= index %>;">
+                        <div class="pin"></div>
+                        
+                        <div class="item-selection-checkbox">
+                            <input type="checkbox" class="item-selector" data-id="<%= item.id %>" data-type="<%= item.type %>">
+                            </div>
+                        
+                        <a href="<%= linkUrl %>" class="link da foto">
+                            <img src="<%= item.imageUrl %>" alt="<%= item.title %>">
+                        </a>
+                        <div class="info">
+                            <h4><a href="<%= linkUrl %>"><%= item.title %></a></h4>
 
-                                        <p>Descrição: <%= item.description %></p>
-                                        <% if (item.type === 'album') { %>
-                                            <p>Total de Fotos: <%= item.photoCount %></p>
-                                        <% } else { %>
-                                            <p>Local: <%= item.location %></p>
-                                            <p>Data: <%= item.captureDate %></p>
-                                            <p>Equipamento: <%= item.equipment %></p>
-                                        <% } %>
-                                        <p>Tags: <%= item.tags && item.tags.length > 0 ? item.tags.map(tag => '#' + tag).join(', ') : 'Nenhuma tag' %></p>
-                                    </div>
-                                </div>
-                            <% }); %>
-                        <% } else { %>
-                            <p style="text-align: center; width: 100%; color: var(--dark-brown);">Nenhuma foto ou álbum para exibir com os filtros aplicados.</p>
-                        <% } %>
+                            <p>Descrição: <%= item.description %></p>
+                            <% if (item.type === 'album') { %>
+                                <p>Total de Fotos: <%= item.photoCount %></p>
+                            <% } else { %>
+                                <p>Local: <%= item.location %></p>
+                                <p>Data: <%= item.captureDate %></p>
+                                <p>Equipamento: <%= item.equipment %></p>
+                            <% } %>
+                            <p>Tags: <%= item.tags && item.tags.length > 0 ? item.tags.map(tag => '#' + tag).join(', ') : 'Nenhuma tag' %></p>
+                        </div>
                     </div>
+                <% }); %>
+            <% } else { %>
+                <p style="text-align: center; width: 100%; color: var(--dark-brown);">Nenhuma foto ou álbum para exibir com os filtros aplicados.</p>
+            <% } %>
+        </div>
 
                     <div id="action-bar" class="action-bar" style="opacity: 0; visibility: hidden; transform: translateX(-50%) rotate(1deg);">
                         <button class="btn btn-secondary">Compartilhar</button>
@@ -154,20 +159,179 @@
     </footer>
 
     <div id="share-modal-overlay" class="modal-overlay" style="opacity: 0; visibility: hidden;">
-        <div class="modal-content" style="transform: rotate(2deg);">
-            <button class="modal-close-btn">&times;</button>
-            <h3>Compartilhar Itens Selecionados</h3>
-            <form action="/share" method="POST">
-                <div class="form-group">
-                    <label for="recipient-email">E-mail do Destinatário:</label>
-                    <input type="email" id="recipient-email" name="recipientEmail" placeholder="email@exemplo.com" required>
-                </div>
-                <button type="submit" class="btn">Enviar Compartilhamento</button>
-            </form>
-            <p style="margin-top: 15px; font-size: 0.9em; color: var(--medium-brown);">
-                Um link para os itens selecionados será enviado para o e-mail do destinatário.
-            </p>
+    <div class="modal-content" style="transform: rotate(2deg);">
+        <button class="modal-close-btn">&times;</button>
+        <h3>Compartilhar Itens Selecionados</h3>
+        <form id="share-form" action="/share" method="POST">
+            <input type="hidden" name="selectedItems" id="selected-items-input"> 
+
+            <div class="form-group">
+                <label for="recipient-email">E-mail do Usuário (para compartilhamento interno):</label>
+                <input type="email" id="recipient-email" name="recipientEmail" placeholder="email@exemplo.com">
+                <small>Deixe em branco para gerar um link público.</small>
+            </div>
+
+            <div class="form-group">
+                <input type="checkbox" id="generate-public-link" name="isPublic">
+                <label for="generate-public-link">Gerar Link Público (qualquer um com o link pode acessar)</label>
+            </div>
+
+            <div class="form-group">
+                <label for="expires-at">Expira em (Opcional):</label>
+                <input type="date" id="expires-at" name="expiresAt">
+            </div>
+
+            <button type="submit" class="btn">Compartilhar</button>
+        </form>
+        
+        <div id="share-link-display" style="margin-top: 20px; text-align: center; display: none;">
+            <p>Link de Compartilhamento:</p>
+            <input type="text" id="generated-share-link" readonly style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+            <button class="btn btn-secondary" onclick="copyShareLink()">Copiar Link</button>
         </div>
+
+        <p style="margin-top: 15px; font-size: 0.9em; color: var(--medium-brown);">
+            Um link para os itens selecionados será gerado ou enviado.
+        </p>
     </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // ... (suas referências existentes) ...
+        const shareModalOverlay = document.getElementById('share-modal-overlay');
+        const modalCloseBtn = document.querySelector('.modal-close-btn');
+        const shareForm = document.getElementById('share-form');
+        const selectedItemsInput = document.getElementById('selected-items-input');
+        const shareLinkDisplay = document.getElementById('share-link-display');
+        const generatedShareLinkInput = document.getElementById('generated-share-link');
+        const generatePublicLinkCheckbox = document.getElementById('generate-public-link');
+        const recipientEmailInput = document.getElementById('recipient-email');
+
+        const itemSelectors = document.querySelectorAll('.item-selector'); // Os checkboxes para cada foto/álbum
+        const actionBar = document.getElementById('action-bar'); // Referência à action-bar
+        const shareButton = actionBar.querySelector('.btn-secondary'); // O botão Compartilhar na action-bar
+
+        let selectedItems = []; // Array para armazenar IDs e tipos dos itens selecionados
+
+        // --- NOVA FUNÇÃO: Alternar visibilidade da action-bar ---
+        function toggleActionBarVisibility() {
+            if (selectedItems.length > 0) {
+                actionBar.style.opacity = '1';
+                actionBar.style.visibility = 'visible';
+                actionBar.style.transform = 'translateX(-50%) rotate(0deg)'; // Remove a rotação se quiser
+            } else {
+                actionBar.style.opacity = '0';
+                actionBar.style.visibility = 'hidden';
+                actionBar.style.transform = 'translateX(-50%) rotate(1deg)'; // Volta ao estado oculto
+            }
+        }
+
+        // Listener para os checkboxes de seleção
+        itemSelectors.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const itemId = this.dataset.id;
+                const itemType = this.dataset.type;
+                if (this.checked) {
+                    selectedItems.push({ id: itemId, type: itemType });
+                } else {
+                    selectedItems = selectedItems.filter(item => item.id !== itemId || item.type !== itemType); // Ajuste para filtrar corretamente
+                }
+                toggleActionBarVisibility(); // Chama a função para atualizar a visibilidade da action-bar
+            });
+        });
+
+        // Função para abrir o modal de compartilhamento
+        function openShareModal() {
+            selectedItemsInput.value = JSON.stringify(selectedItems); // Passa os itens selecionados para o input oculto
+            shareLinkDisplay.style.display = 'none'; // Esconde o link gerado inicialmente
+            shareModalOverlay.style.visibility = 'visible';
+            shareModalOverlay.style.opacity = '1';
+        }
+
+        // Função para fechar o modal
+        modalCloseBtn.addEventListener('click', function() {
+            shareModalOverlay.style.visibility = 'hidden';
+            shareModalOverlay.style.opacity = '0';
+            shareForm.reset(); // Reseta o formulário
+            shareLinkDisplay.style.display = 'none';
+            // Opcional: Desmarcar todos os checkboxes e limpar selectedItems
+            itemSelectors.forEach(checkbox => checkbox.checked = false);
+            selectedItems = [];
+            toggleActionBarVisibility(); // Esconde a action-bar
+        });
+
+        // Event listener para o botão "Compartilhar" na action-bar (este já existia)
+        if (shareButton) {
+            shareButton.addEventListener('click', function() {
+                if (selectedItems.length === 0) {
+                    alert('Por favor, selecione fotos ou álbuns para compartilhar.');
+                    return;
+                }
+                openShareModal(); // Chama a função para abrir o modal
+            });
+        }
+
+        // Event listener para o formulário de compartilhamento dentro do modal
+        shareForm.addEventListener('submit', async function(event) {
+            event.preventDefault(); // Previne o envio padrão do formulário
+
+            const formData = new FormData(this);
+            const itemsToShare = JSON.parse(formData.get('selectedItems'));
+            const isPublic = formData.get('isPublic') === 'on';
+            const recipientEmail = formData.get('recipientEmail').trim();
+            const expiresAt = formData.get('expiresAt');
+
+            if (itemsToShare.length === 0) {
+                alert('Por favor, selecione pelo menos uma foto ou álbum para compartilhar.');
+                return;
+            }
+
+            if (!isPublic && !recipientEmail) {
+                alert('Para compartilhamento interno, forneça o e-mail do destinatário ou selecione "Gerar Link Público".');
+                return;
+            }
+            if (isPublic && recipientEmail) {
+                 if (!confirm('Você selecionou "Gerar Link Público" e forneceu um e-mail. O link público será gerado e NÃO será enviado por e-mail automaticamente. Deseja continuar?')) {
+                     return;
+                 }
+                 formData.set('recipientEmail', '');
+            }
+
+            try {
+                const response = await fetch('/share', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.shareLink) {
+                    generatedShareLinkInput.value = result.shareLink;
+                    shareLinkDisplay.style.display = 'block';
+                    alert('Link de compartilhamento gerado com sucesso!');
+                } else if (response.ok && result.message) {
+                    alert(result.message);
+                    modalCloseBtn.click();
+                } else {
+                    alert('Erro ao compartilhar: ' + (result.error || 'Erro desconhecido.'));
+                }
+            } catch (error) {
+                console.error('Erro ao enviar compartilhamento:', error);
+                alert('Erro na comunicação com o servidor.');
+            }
+        });
+
+        // Lógica para copiar o link gerado
+        function copyShareLink() {
+            generatedShareLinkInput.select();
+            generatedShareLinkInput.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            alert("Link copiado para a área de transferência!");
+        }
+
+        // Adiciona a função copyShareLink ao escopo global (ou ao elemento)
+        window.copyShareLink = copyShareLink;
+    });
+</script>
 </body>
 </html>

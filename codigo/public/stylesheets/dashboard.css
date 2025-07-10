@@ -413,6 +413,25 @@ padding-left: 40%;
     margin-bottom: 3px;
 }
 
+.photo-card {
+    position: relative; /* Necessário para posicionar o checkbox com absolute */
+    /* ... outros estilos ... */
+}
+
+.item-selection-checkbox {
+    position: absolute;
+    top: 10px; /* Distância do topo */
+    right: 10px; /* Distância da direita */
+    z-index: 10; /* Garante que o checkbox fica acima da imagem e outros elementos */
+    padding: 5px; /* Espaçamento interno */
+}
+
+.item-selection-checkbox input[type="checkbox"] {
+    width: 20px; /* Tamanho do checkbox */
+    height: 20px;
+    cursor: pointer;
+}
+
 /* Alfinetes (Pins) */
 .pin {
     position: absolute;
