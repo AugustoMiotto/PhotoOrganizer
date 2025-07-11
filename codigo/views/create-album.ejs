@@ -12,14 +12,15 @@
         <div class="container">
             <h1>PhotoOrganizer</h1>
             <nav>
-        <ul>
-                <li><a href="/dashboard">Painel Principal </a></li>
-                <li><a href="/upload">Enviar Foto</a></li>
-                <li><a href="/create-album">Criar Álbum</a></li>
-                <li><a href="/my-albums">Meus Álbuns</a></li>
-                <li><a href="/profile">Perfil</a></li>
-                <li><a href="/logout">Sair</a></li>
-            </ul>
+                <ul>
+                    <li><a href="/dashboard">Painel Principal </a></li>
+                    <li><a href="/upload">Enviar Foto</a></li>
+                    <li><a href="/create-album">Criar Álbum</a></li>
+                    <li><a href="/my-albums">Meus Álbuns</a></li>
+                    <li><a href="/profile">Perfil</a></li>
+                    <li><a href="/logout">Sair</a></li>
+                </ul>
+            </nav>
         </div>
     </header>
 
@@ -28,22 +29,41 @@
             <div class="create-album-wrapper">
                 <div class="form-card">
                     <h1>Criar Novo Álbum</h1>
-                    <p>Dê um nome e uma descrição para organizar suas memórias.</p>
+                    <p>Dê um nome, uma descrição e adicione suas fotos.</p>
 
                     <% if (locals.error) { %>
                         <div class="message error-message"><%= error %></div>
                     <% } %>
-                    <div id="form-error-message" class="message error-message" style="display: none;"></div>
-
-                    <form action="/create-album" method="POST" id="create-album-form" novalidate>
+                    
+                    <form action="/create-album" method="POST" enctype="multipart/form-data">
                         <div class="form-group">
                             <label for="albumName">Nome do Álbum</label>
-                            <input type="text" id="albumName" name="albumName" placeholder="Ex: Férias de Verão 2025" required>
+                            <input type="text" id="albumName" name="albumName" placeholder="Ex: Viagem para a Praia" required>
                         </div>
                         <div class="form-group">
                             <label for="description">Descrição (Opcional)</label>
-                            <textarea id="description" name="description" rows="4" placeholder="Um resumo do que há neste álbum..."></textarea>
+                            <textarea id="description" name="description" rows="3" placeholder="Um resumo do que há neste álbum..."></textarea>
                         </div>
+
+                        <div class="form-group">
+                            <label for="newPhotos">Adicionar novas fotos do seu computador</label>
+                            <input type="file" id="newPhotos" name="newPhotos" multiple class="form-control-file">
+                        </div>
+
+                        <% if (typeof existingPhotos !== 'undefined' && existingPhotos.length > 0) { %>
+                            <div class="form-group">
+                                <label>Ou selecione fotos que já estão na sua galeria</label>
+                                <div class="existing-photos-grid">
+                                    <% existingPhotos.forEach(photo => { %>
+                                        <label class="photo-selection-item">
+                                            <input type="checkbox" name="existingPhotoIds" value="<%= photo.id %>">
+                                            <img src="<%= photo.filepath %>" alt="<%= photo.title || 'Foto existente' %>">
+                                        </label>
+                                    <% }); %>
+                                </div>
+                            </div>
+                        <% } %>
+
                         <div class="form-actions">
                             <a href="/dashboard" class="btn btn-secondary">Cancelar</a>
                             <button type="submit" class="btn">Criar Álbum</button>
@@ -60,22 +80,5 @@
             <a href="/about-us">Sobre os criadores</a>
         </div>
     </footer>
-
-    <script>
-        const form = document.getElementById('create-album-form');
-        const albumNameInput = document.getElementById('albumName');
-        const errorMessageContainer = document.getElementById('form-error-message');
-
-        form.addEventListener('submit', function(event) {
-            if (albumNameInput.value.trim() === '') {
-                event.preventDefault(); // Impede o envio do formulário
-                errorMessageContainer.textContent = 'O nome do álbum é um campo obrigatório.';
-                errorMessageContainer.style.display = 'block';
-                albumNameInput.focus();
-            } else {
-                errorMessageContainer.style.display = 'none';
-            }
-        });
-    </script>
 </body>
 </html>

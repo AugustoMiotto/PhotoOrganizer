@@ -4,24 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/stylesheets/dashboard.css">
-    <title>PhotoOrganizer - Dashboard</title>
+    <link rel="stylesheet" href="/stylesheets/my-albums.css"> <title>PhotoOrganizer - Dashboard</title>
 </head>
 <body>
-   <header>
-    <div class="container">
-        <h1>PhotoOrganizer</h1>
-        <nav>
-            <ul>
-                <li><a href="/dashboard">Painel Principal </a></li>
-                <li><a href="/upload">Enviar Foto</a></li>
-                <li><a href="/create-album">Criar Álbum</a></li>
-                <li><a href="/my-albums">Meus Álbuns</a></li>
-                <li><a href="/profile">Perfil</a></li>
-                <li><a href="/logout">Sair</a></li>
-            </ul>
-        </nav>
-    </div>
-</header>
+    <header>
+        <div class="container">
+            <h1>PhotoOrganizer</h1>
+            <nav>
+                <ul>
+                    <li><a href="/dashboard">Painel Principal </a></li>
+                    <li><a href="/upload">Enviar Foto</a></li>
+                    <li><a href="/create-album">Criar Álbum</a></li>
+                    <li><a href="/my-albums">Meus Álbuns</a></li>
+                    <li><a href="/profile">Perfil</a></li>
+                    <li><a href="/logout">Sair</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
     <div class="main-wrapper">
         <section class="page-section">
@@ -31,13 +31,12 @@
                     <div class="sidebar-content">
                         <ul>
                             <li><a href="/dashboard" class="<%= !selectedTag && !selectedAlbumId && !selectedLocation && !selectedEquipment && !selectedCaptureDate && !searchTerm ? 'active' : '' %>">Todas as Fotos</a></li>
-                            </ul>
-
+                        </ul>
                         <h3>Filtros</h3>
                         <form id="filter-form" action="/dashboard" method="GET">
                             <div class="form-group">
                                 <label for="search-input">Pesquisar:</label>
-                                <input type="text" id="search-input" name="search" placeholder="Título, descrição, nome do arquivo" value="<%= searchTerm %>">
+                                <input type="text" id="search-input" name="search" placeholder="Título, descrição, nome do arquivo" value="<%= typeof searchTerm !== 'undefined' ? searchTerm : '' %>">
                             </div>
                             <div class="form-group">
                                 <label for="tag-filter">Tag:</label>
@@ -45,7 +44,7 @@
                                     <option value="">Todas as Tags</option>
                                     <% if (typeof tags !== 'undefined' && tags.length > 0) { %>
                                         <% tags.forEach(tag => { %>
-                                            <option value="<%= tag %>" <%= selectedTag === tag ? 'selected' : '' %>><%= tag %></option>
+                                            <option value="<%= tag %>" <%= (typeof selectedTag !== 'undefined' && selectedTag === tag) ? 'selected' : '' %>><%= tag %></option>
                                         <% }); %>
                                     <% } %>
                                 </select>
@@ -56,7 +55,7 @@
                                     <option value="">Todos os Álbuns</option>
                                     <% if (typeof albums !== 'undefined' && albums.length > 0) { %>
                                         <% albums.forEach(album => { %>
-                                            <option value="<%= album.id %>" <%= selectedAlbumId === album.id ? 'selected' : '' %>><%= album.name %></option>
+                                            <option value="<%= album.id %>" <%= (typeof selectedAlbumId !== 'undefined' && selectedAlbumId == album.id) ? 'selected' : '' %>><%= album.name %></option>
                                         <% }); %>
                                     <% } %>
                                 </select>
@@ -67,7 +66,7 @@
                                     <option value="">Todos os Locais</option>
                                     <% if (typeof locations !== 'undefined' && locations.length > 0) { %>
                                         <% locations.forEach(location => { %>
-                                            <option value="<%= location %>" <%= selectedLocation === location ? 'selected' : '' %>><%= location %></option>
+                                            <option value="<%= location %>" <%= (typeof selectedLocation !== 'undefined' && selectedLocation === location) ? 'selected' : '' %>><%= location %></option>
                                         <% }); %>
                                     <% } %>
                                 </select>
@@ -78,14 +77,14 @@
                                     <option value="">Todos os Equipamentos</option>
                                     <% if (typeof equipments !== 'undefined' && equipments.length > 0) { %>
                                         <% equipments.forEach(equipment => { %>
-                                            <option value="<%= equipment %>" <%= selectedEquipment === equipment ? 'selected' : '' %>><%= equipment %></option>
+                                            <option value="<%= equipment %>" <%= (typeof selectedEquipment !== 'undefined' && selectedEquipment === equipment) ? 'selected' : '' %>><%= equipment %></option>
                                         <% }); %>
                                     <% } %>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="date-filter">Data da Foto:</label>
-                                <input type="date" id="date-filter" name="captureDate" value="<%= selectedCaptureDate %>">
+                                <input type="date" id="date-filter" name="captureDate" value="<%= typeof selectedCaptureDate !== 'undefined' ? selectedCaptureDate : '' %>">
                             </div>
                             <button type="submit" class="btn">Aplicar Filtros</button>
                             <a href="/dashboard" class="btn btn-secondary">Limpar Filtros</a>
@@ -95,7 +94,7 @@
 
                 <section class="gallery-content">
                     <div class="gallery-header">
-                        <h2>Minhas Fotos</h2>
+                        <h2>Minhas Fotos e Álbuns</h2>
                         <div class="gallery-controls">
                             <a href="/upload" class="btn">Enviar Nova Foto</a>
                         </div>
@@ -109,38 +108,53 @@
                     <% } %>
 
                     <div class="photo-grid">
-    <% if (typeof photosAndAlbums !== 'undefined' && photosAndAlbums.length > 0) { %>
-        <% photosAndAlbums.forEach((item, index) => { %>
-            <% let linkUrl = item.type === 'album' ? `/album/${item.id}` : `/photo/${item.id}`; %>
-                        <div class="photo-card <%= item.type === 'album' ? 'album-card' : '' %>" data-id="<%= item.id %>" data-type="<%= item.type %>" style="--card-index: <%= index %>;">
-                            <div class="pin"></div>
-                            
-                            <div class="item-selection-checkbox">
-                                <input type="checkbox" class="item-selector" data-id="<%= item.id %>" data-type="<%= item.type %>">
+                        <% if (typeof photosAndAlbums !== 'undefined' && photosAndAlbums.length > 0) { %>
+                            <% photosAndAlbums.forEach((item, index) => { %>
+                                <% let linkUrl = item.type === 'album' ? `/album/${item.id}` : `/photo/${item.id}`; %>
+                                <div class="photo-card <%= item.type === 'album' ? 'album-card' : '' %>" data-id="<%= item.id %>" data-type="<%= item.type %>" style="--card-index: <%= index %>;">
+                                    <div class="pin"></div>
+                                    <div class="item-selection-checkbox">
+                                        <input type="checkbox" class="item-selector" data-id="<%= item.id %>" data-type="<%= item.type %>">
+                                    </div>
+                                    
+                                    <% if (item.type === 'album') { %>
+                                        <div class="album-cover">
+                                            <% if (item.coverImages.length === 0) { %>
+                                                <a href="<%= linkUrl %>"><img src="https://placehold.co/300x200/A07A65/FFF?text=Vazio" class="placeholder-cover" alt="Álbum Vazio"></a>
+                                            <% } else if (item.coverImages.length < 4) { %>
+                                                <a href="<%= linkUrl %>"><img src="<%= item.coverImages[0].filepath %>" class="single-cover" alt="Capa do álbum <%= item.title %>"></a>
+                                            <% } else { %>
+                                                <a href="<%= linkUrl %>" class="mosaic-grid">
+                                                    <% item.coverImages.forEach(image => { %>
+                                                        <div class="mosaic-item" style="background-image: url('<%= image.filepath %>');"></div>
+                                                    <% }); %>
+                                                </a>
+                                            <% } %>
+                                        </div>
+                                    <% } else { %>
+                                        <a href="<%= linkUrl %>">
+                                            <img src="<%= item.imageUrl %>" alt="<%= item.title %>">
+                                        </a>
+                                    <% } %>
+                                    
+                                    <div class="info">
+                                        <h4><a href="<%= linkUrl %>"><%= item.title %></a></h4>
+                                        <p>Descrição: <%= item.description %></p>
+                                        <% if (item.type === 'album') { %>
+                                            <p>Total de Fotos: <%= item.photoCount %></p>
+                                        <% } else { %>
+                                            <p>Local: <%= item.location %></p>
+                                            <p>Data: <%= item.captureDate %></p>
+                                            <p>Equipamento: <%= item.equipment %></p>
+                                        <% } %>
+                                        <p>Tags: <%= item.tags && item.tags.length > 0 ? item.tags.map(tag => '#' + tag).join(', ') : 'Nenhuma tag' %></p>
+                                    </div>
                                 </div>
-                            
-                            <a href="<%= linkUrl %>" class="link da foto">
-                                <img src="<%= item.imageUrl %>" alt="<%= item.title %>">
-                            </a>
-                            <div class="info">
-                                <h4><a href="<%= linkUrl %>"><%= item.title %></a></h4>
-
-                                <p>Descrição: <%= item.description %></p>
-                                <% if (item.type === 'album') { %>
-                                    <p>Total de Fotos: <%= item.photoCount %></p>
-                                <% } else { %>
-                                    <p>Local: <%= item.location %></p>
-                                    <p>Data: <%= item.captureDate %></p>
-                                    <p>Equipamento: <%= item.equipment %></p>
-                                <% } %>
-                                <p>Tags: <%= item.tags && item.tags.length > 0 ? item.tags.map(tag => '#' + tag).join(', ') : 'Nenhuma tag' %></p>
-                            </div>
-                        </div>
-                <% }); %>
-            <% } else { %>
-                <p style="text-align: center; width: 100%; color: var(--dark-brown);">Nenhuma foto ou álbum para exibir com os filtros aplicados.</p>
-            <% } %>
-        </div>
+                            <% }); %>
+                        <% } else { %>
+                            <p style="text-align: center; width: 100%; color: var(--dark-brown);">Nenhuma foto ou álbum para exibir com os filtros aplicados.</p>
+                        <% } %>
+                    </div>
 
                     <div id="action-bar" class="action-bar" style="opacity: 0; visibility: hidden; transform: translateX(-50%) rotate(1deg);">
                         <button class="btn btn-secondary">Compartilhar</button>
@@ -160,42 +174,42 @@
     </footer>
 
     <div id="share-modal-overlay" class="modal-overlay" style="opacity: 0; visibility: hidden;">
-    <div class="modal-content" style="transform: rotate(2deg);">
-        <button class="modal-close-btn">&times;</button>
-        <h3>Compartilhar Itens Selecionados</h3>
-        <form id="share-form" action="/share" method="POST">
-            <input type="hidden" name="selectedItems" id="selected-items-input"> 
+        <div class="modal-content" style="transform: rotate(2deg);">
+            <button class="modal-close-btn">&times;</button>
+            <h3>Compartilhar Itens Selecionados</h3>
+            <form id="share-form" action="/share" method="POST">
+                <input type="hidden" name="selectedItems" id="selected-items-input"> 
 
-            <div class="form-group">
-                <label for="recipient-email">E-mail do Usuário (para compartilhamento interno):</label>
-                <input type="email" id="recipient-email" name="recipientEmail" placeholder="email@exemplo.com">
-                <small>Deixe em branco para gerar um link público.</small>
+                <div class="form-group">
+                    <label for="recipient-email">E-mail do Usuário (para compartilhamento interno):</label>
+                    <input type="email" id="recipient-email" name="recipientEmail" placeholder="email@exemplo.com">
+                    <small>Deixe em branco para gerar um link público.</small>
+                </div>
+
+                <div class="form-group">
+                    <input type="checkbox" id="generate-public-link" name="isPublic">
+                    <label for="generate-public-link">Gerar Link Público (qualquer um com o link pode acessar)</label>
+                </div>
+
+                <div class="form-group">
+                    <label for="expires-at">Expira em (Opcional):</label>
+                    <input type="date" id="expires-at" name="expiresAt">
+                </div>
+
+                <button type="submit" class="btn">Compartilhar</button>
+            </form>
+            
+            <div id="share-link-display" style="margin-top: 20px; text-align: center; display: none;">
+                <p>Link de Compartilhamento:</p>
+                <input type="text" id="generated-share-link" readonly style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
+                <button class="btn btn-secondary" onclick="copyShareLink()">Copiar Link</button>
             </div>
 
-            <div class="form-group">
-                <input type="checkbox" id="generate-public-link" name="isPublic">
-                <label for="generate-public-link">Gerar Link Público (qualquer um com o link pode acessar)</label>
-            </div>
-
-            <div class="form-group">
-                <label for="expires-at">Expira em (Opcional):</label>
-                <input type="date" id="expires-at" name="expiresAt">
-            </div>
-
-            <button type="submit" class="btn">Compartilhar</button>
-        </form>
-        
-        <div id="share-link-display" style="margin-top: 20px; text-align: center; display: none;">
-            <p>Link de Compartilhamento:</p>
-            <input type="text" id="generated-share-link" readonly style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px;">
-            <button class="btn btn-secondary" onclick="copyShareLink()">Copiar Link</button>
+            <p style="margin-top: 15px; font-size: 0.9em; color: var(--medium-brown);">
+                Um link para os itens selecionados será gerado ou enviado.
+            </p>
         </div>
-
-        <p style="margin-top: 15px; font-size: 0.9em; color: var(--medium-brown);">
-            Um link para os itens selecionados será gerado ou enviado.
-        </p>
     </div>
-</div>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const shareModalOverlay = document.getElementById('share-modal-overlay');
@@ -206,78 +220,68 @@
         const generatePublicLinkCheckbox = document.getElementById('generate-public-link');
         const recipientEmailInput = document.getElementById('recipient-email');
 
-        const itemSelectors = document.querySelectorAll('.item-selector'); // Os checkboxes para cada foto/álbum
-        const actionBar = document.getElementById('action-bar'); // Referência à action-bar
-        const shareButton = actionBar.querySelector('.btn-secondary'); // O botão Compartilhar na action-bar
+        const itemSelectors = document.querySelectorAll('.item-selector');
+        const actionBar = document.getElementById('action-bar');
+        const shareButton = actionBar.querySelector('.btn-secondary');
 
-        let selectedItems = []; // Array para armazenar IDs e tipos dos itens selecionados
+        let selectedItems = [];
 
-        // Alternar visibilidade da action-bar 
         function toggleActionBarVisibility() {
             if (selectedItems.length > 0) {
                 actionBar.style.opacity = '1';
                 actionBar.style.visibility = 'visible';
-                actionBar.style.transform = 'translateX(-50%) rotate(0deg)'; // Remove a rotação se quiser
+                actionBar.style.transform = 'translateX(-50%) rotate(0deg)';
             } else {
                 actionBar.style.opacity = '0';
                 actionBar.style.visibility = 'hidden';
-                actionBar.style.transform = 'translateX(-50%) rotate(1deg)'; // Volta ao estado oculto
+                actionBar.style.transform = 'translateX(-50%) rotate(1deg)';
             }
         }
 
-        // Listener para os checkboxes de seleção
         itemSelectors.forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 const itemId = this.dataset.id;
                 const itemType = this.dataset.type;
                 if (this.checked) {
-                    // Adiciona se não estiver já adicionado (evita duplicatas, embora o change seja para o estado)
                     if (!selectedItems.some(item => item.id === itemId && item.type === itemType)) {
                         selectedItems.push({ id: itemId, type: itemType });
                     }
                 } else {
-                    // CORREÇÃO AQUI: Remove o item que tem o ID E o TIPO correspondentes
                     selectedItems = selectedItems.filter(item => !(item.id === itemId && item.type === itemType));
                 }
-                console.log("Itens Selecionados:", selectedItems); // Log para depuração
-                toggleActionBarVisibility(); // Chama a função para atualizar a visibilidade da action-bar
+                console.log("Itens Selecionados:", selectedItems);
+                toggleActionBarVisibility();
             });
         });
 
-        // Função para abrir o modal de compartilhamento
         function openShareModal() {
-            shareLinkDisplay.style.display = 'none'; // Esconde o link gerado inicialmente
+            shareLinkDisplay.style.display = 'none';
             shareModalOverlay.style.visibility = 'visible';
             shareModalOverlay.style.opacity = '1';
         }
 
-        // Função para fechar o modal
         modalCloseBtn.addEventListener('click', function() {
             shareModalOverlay.style.visibility = 'hidden';
             shareModalOverlay.style.opacity = '0';
-            shareForm.reset(); // Reseta o formulário
+            shareForm.reset();
             shareLinkDisplay.style.display = 'none';
-            // Opcional: Desmarcar todos os checkboxes e limpar selectedItems
             itemSelectors.forEach(checkbox => checkbox.checked = false);
             selectedItems = [];
-            toggleActionBarVisibility(); // Esconde a action-bar
+            toggleActionBarVisibility();
         });
 
-        // Event listener para o botão "Compartilhar" na action-bar (este já existia)
         if (shareButton) {
             shareButton.addEventListener('click', function() {
                 if (selectedItems.length === 0) {
                     alert('Por favor, selecione fotos ou álbuns para compartilhar.');
                     return;
                 }
-                openShareModal(); // Chama a função para abrir o modal
+                openShareModal();
             });
         }
 
-        // Event listener para o formulário de compartilhamento dentro do modal
         shareForm.addEventListener('submit', async function(event) {
-            event.preventDefault(); // Previne o envio padrão do formulário
-
+            event.preventDefault();
             const formData = new FormData(this);
             formData.set('selectedItems', JSON.stringify(selectedItems));
             const itemsToShare = selectedItems;
@@ -306,7 +310,6 @@
                     method: 'POST',
                     body: formData
                 });
-
                 const result = await response.json();
 
                 if (response.ok && result.shareLink) {
@@ -325,15 +328,12 @@
             }
         });
 
-        // Lógica para copiar o link gerado
         function copyShareLink() {
             generatedShareLinkInput.select();
             generatedShareLinkInput.setSelectionRange(0, 99999);
             document.execCommand("copy");
             alert("Link copiado para a área de transferência!");
         }
-
-        // Adiciona a função copyShareLink ao escopo global (ou ao elemento)
         window.copyShareLink = copyShareLink;
     });
 </script>

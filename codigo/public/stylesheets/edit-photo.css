@@ -1,0 +1,59 @@
+/* CRIE ESTE NOVO ARQUIVO: public/stylesheets/edit-photo.css */
+
+.edit-photo-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+/* Usamos a mesma classe .form-card para herdar os estilos base */
+.form-card {
+    background: var(--paper-color);
+    padding: 40px;
+    padding-top: 60px; /* Espaço para o alfinete */
+    border-radius: 10px;
+    box-shadow: 0 5px 15px var(--shadow-medium);
+    width: 100%;
+    max-width: 700px;
+    position: relative;
+    transform: rotate(-0.5deg);
+}
+
+/* Alfinete para o card de edição */
+.form-card::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: var(--pin-color-4); /* Usando o alfinete amarelo para diferenciar */
+    z-index: 10;
+}
+
+.form-card h1, .form-card p {
+    text-align: center;
+    color: var(--dark-brown);
+}
+
+.form-card h1 {
+    margin-bottom: 10px;
+}
+
+.form-card p {
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+}
+
+/* Os estilos de .form-group, label, input, etc., são herdados de dashboard.css */
+.form-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+}

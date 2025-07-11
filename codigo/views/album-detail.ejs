@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= album.name %> - PhotoOrganizer</title>
+    <link rel="stylesheet" href="/stylesheets/dashboard.css">
+    <link rel="stylesheet" href="/stylesheets/my-albums.css">
+    <link rel="stylesheet" href="/stylesheets/album-detail.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>PhotoOrganizer</h1>
+            <nav>
+                <ul>
+                    <li><a href="/dashboard">Painel Principal </a></li>
+                    <li><a href="/upload">Enviar Foto</a></li>
+                    <li><a href="/create-album">Criar Álbum</a></li>
+                    <li><a href="/my-albums">Meus Álbuns</a></li>
+                    <li><a href="/profile">Perfil</a></li>
+                    <li><a href="/logout">Sair</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <section class="page-section">
+            <div class="album-detail-container">
+                
+                <div class="album-detail-header">
+                    <div class="album-info">
+                        <h1><%= album.name %></h1>
+                        <p><%= album.description || 'Este álbum não tem descrição.' %></p>
+                    </div>
+                    <div class="album-actions-main">
+                        <a href="/album/edit/<%= album.id %>" class="btn btn-secondary">Editar Detalhes</a>
+                        <form action="/album/delete/<%= album.id %>" method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir o álbum \'<%= album.name %>\'? As fotos não serão apagadas.');">
+                            <button type="submit" class="btn btn-danger">Excluir Álbum</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="photo-grid">
+                    <% if (album.photos && album.photos.length > 0) { %>
+                        <% album.photos.forEach((photo, index) => { %>
+                            <div class="photo-card" style="--card-index: <%= index %>;">
+                                <div class="pin"></div>
+                                <a href="/photo/<%= photo.id %>">
+                                    <img src="<%= photo.filepath %>" alt="<%= photo.title || 'Foto do álbum' %>">
+                                </a>
+                                <div class="info">
+                                    <h4><a href="/photo/<%= photo.id %>"><%= photo.title || photo.filename %></a></h4>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="empty-message">
+                            <p>Este álbum ainda não tem fotos.</p>
+                            <a href="/upload" class="btn">Adicione a primeira foto!</a>
+                        </div>
+                    <% } %>
+                </div>
+
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 PhotoOrganizer. Todos os direitos reservados.</p>
+            <a href="/about-us">Sobre os criadores</a>
+        </div>
+    </footer>
+</body>
+</html>

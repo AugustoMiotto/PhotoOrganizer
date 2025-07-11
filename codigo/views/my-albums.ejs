@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="/stylesheets/my-albums.css">
 </head>
 <body>
-    
     <header>
         <div class="container">
             <h1>PhotoOrganizer</h1>
@@ -45,19 +44,27 @@
                 <div class="album-grid">
                     <% if (albums && albums.length > 0) { %>
                         <% albums.forEach((album, index) => { %>
-                            <a href="/album/<%= album.id %>" class="album-card-link">
-                                <div class="album-card" style="--card-index: <%= index %>;">
-                                    <div class="pin"></div>
-                                    <div class="album-cover">
-                                        <img src="<%= album.coverImageUrl %>" alt="Capa do álbum <%= album.name %>">
-                                    </div>
-                                    <div class="info">
-                                        <h4><%= album.name %></h4>
-                                        <p class="album-description"><%= album.description %></p>
-                                        <p class="photo-count"><%= album.photoCount %> foto(s)</p>
-                                    </div>
+                            <div class="album-card" style="--card-index: <%= index %>;">
+                                <div class="pin"></div>
+                                <div class="album-cover">
+                                    <% if (album.coverImages.length === 0) { %>
+                                        <a href="/album/<%= album.id %>"><img src="https://placehold.co/300x200/A07A65/FFF?text=Vazio" class="placeholder-cover" alt="Álbum Vazio"></a>
+                                    <% } else if (album.coverImages.length < 4) { %>
+                                        <a href="/album/<%= album.id %>"><img src="<%= album.coverImages[0].filepath %>" class="single-cover" alt="Capa do álbum <%= album.name %>"></a>
+                                    <% } else { %>
+                                        <a href="/album/<%= album.id %>" class="mosaic-grid">
+                                            <% album.coverImages.forEach(image => { %>
+                                                <div class="mosaic-item" style="background-image: url('<%= image.filepath %>');"></div>
+                                            <% }); %>
+                                        </a>
+                                    <% } %>
                                 </div>
-                            </a>
+                                <div class="info">
+                                    <h4><a href="/album/<%= album.id %>"><%= album.name %></a></h4>
+                                    <p class="album-description"><%= album.description %></p>
+                                    <p class="photo-count"><%= album.photoCount %> foto(s)</p>
+                                </div>
+                            </div>
                         <% }); %>
                     <% } else { %>
                         <div class="empty-message">

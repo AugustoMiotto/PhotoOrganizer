@@ -267,24 +267,32 @@ router.get('/dashboard', isAuthenticated, async function(req, res, next) {
       });
     });
 
-    // Se não houver filtro de álbum, adicione os álbuns do usuário também
-    if (!albumId && !tag && !location && !equipment && !captureDate && !search) {
-        const allUserAlbums = await db.Album.findAll({
-            where: { userId: userId },
-            include: [{ model: db.Photo, as: 'photos', attributes: ['id'] }],
-            order: [['name', 'ASC']]
+    // Se não houver filtro de álbum, adicione os álbuns do usuário também (LÓGICA CORRIGIDA FINAL)
+if (!albumId && !tag && !location && !equipment && !captureDate && !search) {
+    const allUserAlbums = await db.Album.findAll({
+        where: { userId: userId },
+        order: [['name', 'ASC']]
+    });
+    
+    for (const album of allUserAlbums) {
+        // Busca as 4 primeiras fotos do álbum separadamente
+        const coverPhotos = await album.getPhotos({
+            limit: 4,
+            order: [['createdAt', 'DESC']]
         });
-        allUserAlbums.forEach(album => {
-            photosAndAlbums.push({
-                id: album.id,
-                type: 'album',
-                imageUrl: 'https://placehold.co/300x200/A07A65/FFF?text=ALBUM', // Ou a capa do álbum
-                title: album.name,
-                description: album.description || 'Sem descrição',
-                photoCount: album.photos.length,
-            });
+        
+        const totalPhotos = await album.countPhotos();
+        
+        photosAndAlbums.push({
+            id: album.id,
+            type: 'album',
+            coverImages: coverPhotos.map(p => ({ filepath: p.filepath })), // Passa as imagens para a capa
+            title: album.name,
+            description: album.description || 'Sem descrição',
+            photoCount: totalPhotos
         });
     }
+}
 
     // Ordenar photosAndAlbums (se misturar fotos e álbuns)
     photosAndAlbums.sort((a, b) => {
@@ -437,14 +445,25 @@ router.get('/logout', function(req, res, next) {
 router.get('/about-us',function(req,res,next){
   res.render('about-us')
 })
-// GET: Rota para exibir o formulário de criação de álbum
-router.get('/create-album', isAuthenticated, (req, res) => {
-    // Renderiza a view, passando possíveis mensagens de erro/sucesso do redirecionamento
-    res.render('create-album', { 
-        user: req.user,
-        error: req.query.error,
-        success: req.query.success 
-    });
+// GET: Rota para exibir o formulário de criação de álbum (ATUALIZADA)
+router.get('/create-album', isAuthenticated, async (req, res) => {
+    try {
+        // Busca todas as fotos do usuário para exibir na seleção
+        const existingPhotos = await db.Photo.findAll({
+            where: { userId: req.user.id },
+            order: [['uploadDate', 'DESC']]
+        });
+
+        res.render('create-album', {
+            user: req.user,
+            existingPhotos: existingPhotos, // Passa as fotos para a view
+            error: req.query.error,
+            success: req.query.success
+        });
+    } catch (error) {
+        console.error("Erro ao carregar página de criação de álbum:", error);
+        res.redirect('/dashboard?error=Erro ao carregar a página.');
+    }
 });
 
 // GET foto detalhada
@@ -600,47 +619,41 @@ router.put('/photo/:id', async function(req, res, next) {
   }
 });
 
-// GET - PÁGINA PARA VISUALIZAR APENAS OS ÁLBUNS
+// GET - PÁGINA PARA VISUALIZAR APENAS OS ÁLBUNS (VERSÃO CORRIGIDA FINAL)
 router.get('/my-albums', isAuthenticated, async function(req, res, next) {
   try {
     const userId = req.user.id;
-
-    // 1. Busca todos os álbuns do usuário
     const userAlbums = await db.Album.findAll({
       where: { userId: userId },
-      // Inclui as fotos associadas para contagem e para a imagem de capa
-      include: [{
-        model: db.Photo,
-        as: 'photos',
-        attributes: ['filepath'], // Pega apenas o caminho da imagem, para otimizar
-        through: { attributes: [] } // Não precisa dos dados da tabela de junção
-      }],
-      order: [['name', 'ASC']] // Ordena os álbuns por nome
+      order: [['name', 'ASC']]
     });
 
-    // 2. Formata os dados para a view
-    const formattedAlbums = userAlbums.map(album => {
-      const photoCount = album.photos ? album.photos.length : 0;
-      // Define uma imagem de capa. Se o álbum tiver fotos, usa a primeira. Senão, um placeholder.
-      const coverImageUrl = photoCount > 0 ? album.photos[0].filepath : 'https://placehold.co/300x200/A07A65/FFF?text=Vazio';
+    const formattedAlbums = [];
+    for (const album of userAlbums) {
+        // Busca as 4 primeiras fotos do álbum separadamente
+        const coverPhotos = await album.getPhotos({
+            limit: 4,
+            order: [['createdAt', 'DESC']]
+        });
+        
+        const totalPhotos = await album.countPhotos();
 
-      return {
-        id: album.id,
-        name: album.name,
-        description: album.description || 'Sem descrição',
-        photoCount: photoCount,
-        coverImageUrl: coverImageUrl
-      };
-    });
+        formattedAlbums.push({
+            id: album.id,
+            name: album.name,
+            description: album.description || 'Sem descrição',
+            photoCount: totalPhotos,
+            coverImages: coverPhotos.map(p => ({ filepath: p.filepath })) // Mapeia para o formato esperado
+        });
+    }
 
-    // 3. Renderiza a nova página EJS, passando os álbuns formatados
     res.render('my-albums', {
       user: req.user,
       albums: formattedAlbums,
       error: req.query.error,
       success: req.query.success
     });
-
+    
   } catch (error) {
     console.error('Erro ao carregar a página de álbuns:', error);
     res.redirect('/dashboard?error=Não foi possível carregar seus álbuns.');
@@ -767,8 +780,56 @@ router.get('/share/:shareToken', async (req, res) => {
     res.status(500).send('Ocorreu um erro ao carregar o conteúdo compartilhado. Tente novamente.');
   }
 });
+// GET: Rota para visualizar os detalhes e as fotos de um álbum específico
+router.get('/album/:id', isAuthenticated, async (req, res) => {
+  try {
+    const albumId = req.params.id;
+    const userId = req.user.id;
 
+    // Busca o álbum e suas fotos, garantindo que ele pertence ao usuário logado
+    const album = await db.Album.findOne({
+      where: {
+        id: albumId,
+        userId: userId
+      },
+      include: [{
+        model: db.Photo,
+        as: 'photos',
+        through: { attributes: [] } // Não precisa dos dados da tabela de junção
+      }],
+      order: [
+        // Ordena as fotos dentro do álbum pela data de upload
+        [{ model: db.Photo, as: 'photos' }, 'uploadDate', 'DESC']
+      ]
+    });
 
+    if (!album) {
+      // Se o álbum não existe ou não pertence ao usuário, redireciona com erro
+      return res.redirect('/my-albums?error=Álbum não encontrado.');
+    }
+
+    res.render('album-detail', { 
+        album: album,
+        user: req.user 
+    });
+
+  } catch (error) {
+    console.error("Erro ao carregar detalhes do álbum:", error);
+    res.redirect('/my-albums?error=Ocorreu um erro ao carregar o álbum.');
+  }
+});
+// GET: Rota para exibir o formulário de edição de um álbum
+router.get('/album/edit/:id', isAuthenticated, async (req, res) => {
+  try {
+    const album = await db.Album.findOne({ where: { id: req.params.id, userId: req.user.id } });
+    if (!album) {
+      return res.redirect('/my-albums?error=Álbum não encontrado.');
+    }
+    res.render('edit-album', { album: album, error: req.query.error });
+  } catch (error) {
+    res.redirect('/my-albums?error=Ocorreu um erro.');
+  }
+});
 // --------- ROTAS POST ---------
 
 // POST register page
@@ -1100,32 +1161,55 @@ router.post('/upload', isAuthenticated, upload.single('image'), async function(r
     res.redirect('/upload?error=Ocorreu um erro ao enviar a foto. Tente novamente.');
   }
 });
-// POST: Rota para processar a criação do álbum
-router.post('/create-album', isAuthenticated, async (req, res) => {
-    // Pega os dados do corpo do formulário. O nome do input no EJS será 'albumName'.
-    const { albumName, description } = req.body;
-    const userId = req.user.id; // ID do usuário logado
+// POST: Rota para processar a criação do álbum com fotos (VERSÃO COMPLETA E NOVA)
+router.post('/create-album', isAuthenticated, upload.array('newPhotos', 20), async (req, res) => {
+    const { albumName, description, existingPhotoIds } = req.body;
+    const userId = req.user.id;
 
+    const t = await db.sequelize.transaction();
     try {
-        // 1. Validação no Servidor
         if (!albumName || albumName.trim() === '') {
-            // Redireciona de volta para o formulário com uma mensagem de erro
             return res.redirect('/create-album?error=O nome do álbum é obrigatório.');
         }
 
-        // 2. Criação do Álbum no Banco de Dados usando Sequelize
-        await db.Album.create({
+        const newAlbum = await db.Album.create({
             name: albumName.trim(),
             description: description ? description.trim() : null,
             userId: userId
-        });
-        
-        // 3. Redirecionamento para o Dashboard com mensagem de sucesso
-        res.redirect('/dashboard?success=Álbum criado com sucesso!');
+        }, { transaction: t });
 
+        if (req.files && req.files.length > 0) {
+            const newPhotoPromises = req.files.map(file =>
+                db.Photo.create({
+                    userId: userId,
+                    filename: file.originalname,
+                    storageFilename: file.filename,
+                    filepath: '/uploads/' + file.filename,
+                    mimetype: file.mimetype,
+                    size: file.size,
+                    title: file.originalname
+                }, { transaction: t })
+            );
+            const createdPhotos = await Promise.all(newPhotoPromises);
+            await newAlbum.addPhotos(createdPhotos, { transaction: t });
+        }
+        
+        if (existingPhotoIds && existingPhotoIds.length > 0) {
+            const photoIds = Array.isArray(existingPhotoIds) ? existingPhotoIds : [existingPhotoIds];
+            const photosToAssociate = await db.Photo.findAll({
+                where: {
+                    id: photoIds,
+                    userId: userId
+                }
+            }, { transaction: t });
+            await newAlbum.addPhotos(photosToAssociate, { transaction: t });
+        }
+
+        await t.commit();
+        res.redirect('/my-albums?success=Álbum criado com sucesso!');
     } catch (error) {
-        // Tratamento de erros do banco de dados
-        console.error('Erro ao criar o álbum:', error);
+        await t.rollback();
+        console.error('Erro ao criar o álbum com fotos:', error);
         res.redirect('/create-album?error=Ocorreu um erro inesperado. Tente novamente.');
     }
 });
@@ -1301,5 +1385,40 @@ router.post('/share', isAuthenticated, upload.none(), async (req, res) => {
   }
 });
 
+// POST: Rota para salvar as alterações do álbum
+router.post('/album/edit/:id', isAuthenticated, async (req, res) => {
+  try {
+    const { albumName, description } = req.body;
+    if (!albumName || albumName.trim() === '') {
+      return res.redirect(`/album/edit/${req.params.id}?error=O nome não pode ser vazio.`);
+    }
+    const album = await db.Album.findOne({ where: { id: req.params.id, userId: req.user.id } });
+    if (album) {
+      await album.update({
+        name: albumName.trim(),
+        description: description ? description.trim() : null
+      });
+      res.redirect(`/album/${album.id}?success=Álbum atualizado!`);
+    } else {
+      res.redirect('/my-albums?error=Álbum não encontrado.');
+    }
+  } catch (error) {
+    res.redirect(`/my-albums?error=Ocorreu um erro ao salvar.`);
+  }
+});
 
+// POST: Rota para excluir um álbum
+router.post('/album/delete/:id', isAuthenticated, async (req, res) => {
+  try {
+    const album = await db.Album.findOne({ where: { id: req.params.id, userId: req.user.id } });
+    if (album) {
+      await album.destroy();
+      res.redirect('/my-albums?success=Álbum excluído com sucesso!');
+    } else {
+      res.redirect('/my-albums?error=Álbum não encontrado.');
+    }
+  } catch (error) {
+    res.redirect('/my-albums?error=Ocorreu um erro ao excluir.');
+  }
+});
 module.exports = router;

@@ -1,45 +1,77 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/stylesheets/style.css" /> <title>Editar Foto - <%= photo.title || photo.filename %></title>
+    <link rel="stylesheet" href="/stylesheets/dashboard.css" />
+    <link rel="stylesheet" href="/stylesheets/create-album.css" /> <link rel="stylesheet" href="/stylesheets/edit-photo.css" />
+    <title>Editar Foto - <%= photo.title || photo.filename %></title>
 </head>
 <body>
-    <div class="container">
-        <h1>Editar Foto</h1>
+    <header>
+        <div class="container">
+            <h1>PhotoOrganizer</h1>
+            <nav>
+                <ul>
+                    <li><a href="/dashboard">Painel Principal </a></li>
+                    <li><a href="/upload">Enviar Foto</a></li>
+                    <li><a href="/create-album">Criar Álbum</a></li>
+                    <li><a href="/my-albums">Meus Álbuns</a></li>
+                    <li><a href="/profile">Perfil</a></li>
+                    <li><a href="/logout">Sair</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
-        <form action="/photo/<%= photo.id %>?_method=PUT" method="POST">
-            <div class="form-group">
-                <label for="title">Título</label>
-                <input type="text" id="title" name="title" value="<%= photo.title %>">
-            </div>
+    <div class="main-wrapper">
+        <div class="page-section">
+            <div class="edit-photo-wrapper">
+                <div class="form-card">
+                    <h1>Editar Detalhes da Foto</h1>
+                    <p>Altere as informações e metadados da sua imagem.</p>
 
-            <div class="form-group">
-                <label for="description">Descrição</label>
-                <textarea id="description" name="description" rows="4"><%= photo.description || '' %></textarea>
-            </div>
+                    <form action="/photo/<%= photo.id %>?_method=PUT" method="POST">
+                        <div class="form-group">
+                            <label for="title">Título</label>
+                            <input type="text" id="title" name="title" class="form-control" value="<%= photo.title || '' %>">
+                        </div>
 
-            <div class="form-group">
-                <label for="captureDate">Data da Captura</label>
-                <input type="date" id="captureDate" name="captureDate" value="<%= photo.captureDate ? new Date(photo.captureDate).toISOString().split('T')[0] : '' %>">
-            </div>
+                        <div class="form-group">
+                            <label for="description">Descrição</label>
+                            <textarea id="description" name="description" rows="4" class="form-control"><%= photo.description || '' %></textarea>
+                        </div>
 
-            <div class="form-group">
-                <label for="location">Local</label>
-                <input type="text" id="location" name="location" value="<%= photo.location || '' %>">
-            </div>
+                        <div class="form-group">
+                            <label for="captureDate">Data da Captura</label>
+                            <input type="date" id="captureDate" name="captureDate" class="form-control" value="<%= photo.captureDate ? new Date(photo.captureDate).toISOString().split('T')[0] : '' %>">
+                        </div>
 
-            <div class="form-group">
-                <label for="equipment">Equipamento</label>
-                <input type="text" id="equipment" name="equipment" value="<%= photo.equipment || '' %>">
+                        <div class="form-group">
+                            <label for="location">Local</label>
+                            <input type="text" id="location" name="location" class="form-control" value="<%= photo.location || '' %>">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="equipment">Equipamento</label>
+                            <input type="text" id="equipment" name="equipment" class="form-control" value="<%= photo.equipment || '' %>">
+                        </div>
+                        
+                        <div class="form-actions">
+                            <a href="/photo/<%= photo.id %>" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn">Salvar Alterações</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                <a href="/photo/<%= photo.id %>" class="btn btn-secondary">Cancelar</a>
-            </div>
-        </form>
+        </div>
     </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 PhotoOrganizer. Todos os direitos reservados.</p>
+            <a href="/about-us">Sobre os criadores</a>
+        </div>
+    </footer>
 </body>
 </html>

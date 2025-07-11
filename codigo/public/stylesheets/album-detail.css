@@ -1,0 +1,39 @@
+/* CRIE ESTE NOVO ARQUIVO: public/stylesheets/album-detail.css */
+
+.album-detail-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.album-detail-header {
+    background: var(--paper-color);
+    padding: 25px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 12px var(--shadow-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.album-detail-header .album-info h1 {
+    color: var(--dark-brown);
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.album-detail-header .album-info p {
+    color: var(--medium-brown);
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.album-actions-main {
+    display: flex;
+    gap: 15px;
+    flex-shrink: 0;
+}
