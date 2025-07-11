@@ -483,6 +483,123 @@ router.get('/photo/:id', async function(req, res, next) {
   }
 });
 
+// Rota para excluir a foto aberta
+router.delete('/photo/:id', async function(req, res, next) {
+  try {
+    const photoId = req.params.id;
+    const userId = req.user.id;
+
+    const photo = await db.Photo.findByPk(photoId);
+
+    if (!photo) {
+      return res.status(404).send('Foto não encontrada.');
+    }
+
+    //somente o dono da foto pode excluí-la
+    if (photo.userId !== userId) {
+      return res.status(403).send('Você não tem permissão para excluir esta foto.');
+    }
+
+    //exclui o arquivo do servidor
+    const caminho = path.join(process.cwd(),'public', 'uploads', photo.filepath);
+    try {
+      await fs.unlink(caminho);
+    } catch (fileError) {
+      console.error('Erro ao tentar excluir o arquivo da foto:', fileError);
+    }
+
+    await photo.destroy();
+    //não apaga do upload por motivos de monitoramento secreto...
+    res.redirect('/dashboard');
+
+  } catch (error) {
+    console.error('Erro ao excluir a foto:', error);
+    res.status(500).send('Erro ao processar a exclusão da foto.');
+  }
+});
+
+// Rota para MOSTRAR o formulário de edição de uma foto
+router.get('/photo/:id/edit', async function(req, res, next) {
+  try {
+    const photoId = req.params.id;
+    const userId = req.user.id;
+
+    // Busca a foto incluindo as associações para preencher o formulário
+    const photo = await db.Photo.findByPk(photoId, {
+      include: [
+        { model: db.Tag, as: 'tags', through: { attributes: [] } },
+        { model: db.Category, as: 'categories', through: { attributes: [] } },
+        { model: db.Album, as: 'albums', through: { attributes: [] } }
+      ]
+    });
+
+    if (!photo) {
+      return res.status(404).send('Foto não encontrada.');
+    }
+
+    // VERIFICAÇÃO DE SEGURANÇA: Garante que apenas o dono da foto pode editá-la
+    if (photo.userId !== userId) {
+      return res.status(403).send('Você não tem permissão para editar esta foto.');
+    }
+    
+    // Você também pode querer buscar todas as tags/categorias/álbuns disponíveis
+    // para que o usuário possa escolher no formulário. Ex:
+    // const allTags = await db.Tag.findAll();
+    // E passar para o res.render
+
+    res.render('edit-photo', { photo }); // Renderiza uma nova view 'edit-photo.ejs'
+
+  } catch (error) {
+    console.error('Erro ao carregar formulário de edição:', error);
+    res.status(500).send('Erro ao carregar a página de edição.');
+  }
+});
+
+// Rota para ATUALIZAR uma foto após o envio do formulário de edição
+router.put('/photo/:id', async function(req, res, next) {
+  try {
+    const photoId = req.params.id;
+    const userId = req.user.id;
+    
+    const photo = await db.Photo.findByPk(photoId);
+
+    if (!photo) {
+      return res.status(404).send('Foto não encontrada.');
+    }
+
+    // VERIFICAÇÃO DE SEGURANÇA: Garante que apenas o dono da foto pode alterá-la
+    if (photo.userId !== userId) {
+      return res.status(403).send('Você não tem permissão para alterar esta foto.');
+    }
+
+    // Extrai os dados do corpo da requisição (do formulário)
+    const { title, description, captureDate, location, equipment } = req.body;
+
+    // Atualiza a foto no banco de dados com os novos dados
+    await photo.update({
+      title,
+      description,
+      captureDate: captureDate || null, // Garante que datas vazias virem null
+      location,
+      equipment
+    });
+    
+    // Lógica para atualizar tags, categorias e álbuns seria mais complexa.
+    // Exemplo para tags:
+    // if (req.body.tags) {
+    //   const tagNames = req.body.tags.split(',').map(t => t.trim());
+    //   // ... lógica para encontrar ou criar tags e associá-las com photo.setTags()
+    // }
+
+    // Redireciona o usuário de volta para a página da foto para ver as alterações
+    res.redirect(`/photo/${photoId}`);
+
+  } catch (error) {
+    console.error('Erro ao atualizar a foto:', error);
+    res.status(500).send('Erro ao processar a atualização da foto.');
+  }
+});
+
 // GET - PÁGINA PARA VISUALIZAR APENAS OS ÁLBUNS
 router.get('/my-albums', isAuthenticated, async function(req, res, next) {
   try {
@@ -529,65 +646,6 @@ router.get('/my-albums', isAuthenticated, async function(req, res, next) {
     res.redirect('/dashboard?error=Não foi possível carregar seus álbuns.');
   }
 });
-
-/*GET para editar foto FALTA ARRUMAR
-router.get('/photo/:id/edit', ensureAuth, async (req, res, next) => {
-  try {
-    // Busca a foto apenas do usuário logado
-    const photo = await Photo.findOne({
-      where: { id: req.params.id, userId: req.user.id }
-    });
-
-    if (!photo) {
-      return res.status(404).send('Foto não encontrada');
-    }
-
-    // Se quiser permitir re-alocar em outro álbum
-    const albums = await Album.findAll({
-      where: { userId: req.user.id },
-      order: [['createdAt', 'DESC']]
-    });
-
-    res.render('photo-edit', { photo, albums });
-  } catch (err) {
-    next(err);
-  }
-});
-
-//Rota PUT FALTA ARRUMAR
-router.put('/photo/:id', ensureAuth, async (req, res, next) => {
-  try {
-    const { title, description, location, captureDate, album, tags } = req.body;
-
-    // Encontra a foto e garante que pertence ao usuário
-    const photo = await Photo.findOne({
-      where: { id: req.params.id, userId: req.user.id }
-    });
-
-    if (!photo) {
-      return res.status(404).send('Foto não encontrada');
-    }
-
-    // Atualiza os campos
-    await photo.update({
-      title,
-      description,
-      location,
-      captureDate: captureDate || null,
-      albumId: album === 'Nenhum Álbum' ? null : album,
-      tags: tags
-        .split(',')
-        .map(t => t.trim())
-        .filter(t => t.length > 0)
-    });
-
-    res.redirect(`/photo/${photo.id}`);
-  } catch (err) {
-    next(err);
-  }
-});
-*/
-
 
 // ROTA GET para acessar conteúdo compartilhado via token 
 router.get('/share/:shareToken', async (req, res) => {

@@ -5,7 +5,7 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const indexRouter = require('./routes/index');
 const app = express();
-
+const methodOverride = require('method-override');
 // importações para sessão e autenticação
 const session = require('express-session');
 const passport = require('passport');
@@ -54,7 +54,7 @@ passport.deserializeUser(async function(id, done) {
 });
 
 // Sincroniza o banco de dados
-db.sequelize.sync({ force: false}) 
+db.sequelize.sync({ force: false }) 
   .then(() => {
     console.log('Banco de dados sincronizado com sucesso!');
   })
@@ -72,6 +72,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(methodOverride('_method'));
 
 // --- Middlewares de sessão e Passport.js ---
 app.use(session({
