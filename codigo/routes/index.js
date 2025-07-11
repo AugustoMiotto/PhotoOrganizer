@@ -145,186 +145,188 @@ router.get('/reset-password/:token', async function(req, res) {
 
 // GET dashboard 
 router.get('/dashboard', isAuthenticated, async function(req, res, next) {
-  try {
-    const userId = req.user.id;
-    const { tag, albumId, location, equipment, captureDate, search } = req.query; // Pega os parâmetros de consulta
+  try {
+    const userId = req.user.id;
+    const { tag, albumId, location, equipment, captureDate, search } = req.query; // Pega os parâmetros de consulta
 
-    // Condições de filtro para a busca de fotos
-    let photoWhereClause = { userId: userId };
-    let includeTags = [];
-    let includeAlbums = [];
+    // Condições de filtro para a busca de fotos
+    let photoWhereClause = { userId: userId };
+    let includeTags = [];
+    let includeAlbums = [];
 
-    // --- Aplicar filtros ---
-    if (location) {
-      photoWhereClause.location = location;
-    }
-    if (equipment) {
-      photoWhereClause.equipment = equipment;
-    }
-    if (captureDate) {
-      // Para filtrar por uma data específica, ou um período
-      photoWhereClause.captureDate = captureDate;
-    }
-    if (search) {
-      // Busca por título ou descrição (case-insensitive)
-      photoWhereClause[Op.or] = [
-        { title: { [Op.like]: `%${search}%` } },
-        { description: { [Op.like]: `%${search}%` } },
-        { filename: { [Op.like]: `%${search}%` } } // Também busca no nome do arquivo
-      ];
-    }
-    // Filtro por Tag 
-    if (tag) {
-      includeTags.push({
-        model: db.Tag,
-        as: 'tags',
-        where: { name: tag },
-        through: { attributes: [] },
-        required: true // Usa INNER JOIN para garantir que a foto TEM essa tag
-      });
-    } else {
-      // Se não há filtro de tag, ainda inclua as tags para exibição
-      includeTags.push({
-        model: db.Tag,
-        as: 'tags',
-        through: { attributes: [] }
-      });
-    }
-    // Filtro por Álbum (requer include na tabela de junção)
-    if (albumId) {
-      includeAlbums.push({
-        model: db.Album,
-        as: 'albums',
-        where: { id: albumId, userId: userId }, // Garante que o álbum pertence ao usuário
-        through: { attributes: [] },
-        required: true // Usa INNER JOIN para garantir que a foto ESTÁ nesse álbum
-      });
-    } else {
-      // Se não há filtro de álbum, ainda inclua os álbuns para exibição
-      includeAlbums.push({
-        model: db.Album,
-        as: 'albums',
-        through: { attributes: [] }
-      });
-    }
-    // 1. Buscar todas as fotos do usuário com os filtros aplicados
-    const photos = await db.Photo.findAll({
-      where: photoWhereClause,
-      include: [
-        ...includeTags, // Espalha os includes de tags
-        ...includeAlbums  // Espalha os includes de álbuns
-      ],
-      order: [['uploadDate', 'DESC']]
-    });
-    // 2. Buscar todos os álbuns do usuário (para preencher o filtro de álbum)
-    const albumsForFilter = await db.Album.findAll({
-      where: { userId: userId },
-      order: [['name', 'ASC']]
-    });
-    // 3. Buscar todas as tags do usuário (para preencher o filtro de tags)
-    const allUserTags = await db.Tag.findAll({
-      include: [{
-        model: db.Photo,
-        as: 'photos',
-        where: { userId: userId },
-        attributes: [], 
-        through: { attributes: [] },
-        required: true // Garante que a tag está associada a pelo menos uma foto do usuário
-      }],
-      attributes: ['name'], // Pega apenas o nome da tag
-      group: ['Tag.name'], // Garante tags únicas
-      order: [['name', 'ASC']]
-    });
-    const uniqueTags = allUserTags.map(t => t.name);
-
-
-    // 4. Extrair locais e equipamentos únicos de TODAS as fotos do usuário (para preencher os filtros)
-    const allUserPhotosForFilters = await db.Photo.findAll({
-        where: { userId: userId },
-        attributes: ['location', 'equipment'],
-        group: ['location', 'equipment'] // Agrupa para pegar valores únicos mais eficientemente
-    });
-
-    const uniqueLocations = [...new Set(allUserPhotosForFilters.map(p => p.location).filter(Boolean))].sort();
-    const uniqueEquipments = [...new Set(allUserPhotosForFilters.map(p => p.equipment).filter(Boolean))].sort();
+    // --- Aplicar filtros ---
+    if (location) {
+      photoWhereClause.location = location;
+    }
+    if (equipment) {
+      photoWhereClause.equipment = equipment;
+    }
+    if (captureDate) {
+      photoWhereClause.captureDate = captureDate; // Compara diretamente a string AAAA-MM-DD
+      console.log(`[Dashboard Filter DEBUG] Usando comparação direta de string para captureDate: '${captureDate}'`);
+    }
+    if (search) {
+      // Busca por título ou descrição (case-insensitive)
+      photoWhereClause[Op.or] = [
+        { title: { [Op.like]: `%${search}%` } },
+        { description: { [Op.like]: `%${search}%` } },
+        { filename: { [Op.like]: `%${search}%` } } // Também busca no nome do arquivo
+      ];
+    }
+    // Filtro por Tag 
+    if (tag) {
+      includeTags.push({
+        model: db.Tag,
+        as: 'tags',
+        where: { name: tag },
+        through: { attributes: [] },
+        required: true // Usa INNER JOIN para garantir que a foto TEM essa tag
+      });
+    } else {
+      // Se não há filtro de tag, ainda inclua as tags para exibição
+      includeTags.push({
+        model: db.Tag,
+        as: 'tags',
+        through: { attributes: [] }
+      });
+    }
+    // Filtro por Álbum (requer include na tabela de junção)
+    if (albumId) {
+      includeAlbums.push({
+        model: db.Album,
+        as: 'albums',
+        where: { id: albumId, userId: userId }, // Garante que o álbum pertence ao usuário
+        through: { attributes: [] },
+        required: true // Usa INNER JOIN para garantir que a foto ESTÁ nesse álbum
+      });
+    } else {
+      // Se não há filtro de álbum, ainda inclua os álbuns para exibição
+      includeAlbums.push({
+        model: db.Album,
+        as: 'albums',
+        through: { attributes: [] }
+      });
+    }
+    // 1. Buscar todas as fotos do usuário com os filtros aplicados
+    const photos = await db.Photo.findAll({
+      where: photoWhereClause,
+      include: [
+        ...includeTags, // Espalha os includes de tags
+        ...includeAlbums  // Espalha os includes de álbuns
+      ],
+      order: [['uploadDate', 'DESC']]
+    });
+    // 2. Buscar todos os álbuns do usuário (para preencher o filtro de álbum)
+    const albumsForFilter = await db.Album.findAll({
+      where: { userId: userId },
+      order: [['name', 'ASC']]
+    });
+    // 3. Buscar todas as tags do usuário (para preencher o filtro de tags)
+    const allUserTags = await db.Tag.findAll({
+      include: [{
+        model: db.Photo,
+        as: 'photos',
+        where: { userId: userId },
+        attributes: [], 
+        through: { attributes: [] },
+        required: true // Garante que a tag está associada a pelo menos uma foto do usuário
+      }],
+      attributes: ['name'], // Pega apenas o nome da tag
+      group: ['Tag.name'], // Garante tags únicas
+      order: [['name', 'ASC']]
+    });
+    const uniqueTags = allUserTags.map(t => t.name);
 
 
-    // 5. Preparar os dados para o `photo-grid` (misturando fotos e álbuns)
-    let photosAndAlbums = [];
+    // 4. Extrair locais e equipamentos únicos de TODAS as fotos do usuário (para preencher os filtros)
+    const allUserPhotosForFilters = await db.Photo.findAll({
+        where: { userId: userId },
+        attributes: ['location', 'equipment'],
+        group: ['location', 'equipment'] // Agrupa para pegar valores únicos mais eficientemente
+    });
 
-    // Adiciona as fotos filtradas
-    photos.forEach(photo => {
-      photosAndAlbums.push({
-        id: photo.id,
-        type: 'photo',
-        imageUrl: photo.filepath,
-        title: photo.title || photo.filename,
-        description: photo.description || 'Sem descrição',
-        location: photo.location || 'Não informado',
-        captureDate: photo.captureDate ? new Date(photo.captureDate).toLocaleDateString('pt-BR') : 'Não informada',
-        equipment: photo.equipment || 'Não informado',
-        tags: photo.tags.map(tag => tag.name),
-      });
-    });
+    const uniqueLocations = [...new Set(allUserPhotosForFilters.map(p => p.location).filter(Boolean))].sort();
+    const uniqueEquipments = [...new Set(allUserPhotosForFilters.map(p => p.equipment).filter(Boolean))].sort();
 
-    // Se não houver filtro de álbum, adicione os álbuns do usuário também (LÓGICA CORRIGIDA FINAL)
+
+    // 5. Preparar os dados para o `photo-grid` (misturando fotos e álbuns)
+    let photosAndAlbums = [];
+
+    // Adiciona as fotos filtradas
+    photos.forEach(photo => {
+      photosAndAlbums.push({
+        id: photo.id,
+        type: 'photo',
+        imageUrl: photo.filepath,
+        title: photo.title || photo.filename,
+        description: photo.description || 'Sem descrição',
+        location: photo.location || 'Não informado',
+        // --- CORREÇÃO AQUI: Formatar a string de data diretamente ---
+        captureDate: photo.captureDate ? photo.captureDate.split('-').reverse().join('/') : 'Não informada',
+        // -------------------------------------------------------------
+        equipment: photo.equipment || 'Não informado',
+        tags: photo.tags.map(tag => tag.name),
+      });
+    });
+
+    // Se não houver filtro de álbum, adicione os álbuns do usuário também (LÓGICA CORRIGIDA FINAL)
 if (!albumId && !tag && !location && !equipment && !captureDate && !search) {
-    const allUserAlbums = await db.Album.findAll({
-        where: { userId: userId },
-        order: [['name', 'ASC']]
-    });
-    
-    for (const album of allUserAlbums) {
-        // Busca as 4 primeiras fotos do álbum separadamente
-        const coverPhotos = await album.getPhotos({
-            limit: 4,
-            order: [['createdAt', 'DESC']]
-        });
-        
-        const totalPhotos = await album.countPhotos();
-        
-        photosAndAlbums.push({
-            id: album.id,
-            type: 'album',
-            coverImages: coverPhotos.map(p => ({ filepath: p.filepath })), // Passa as imagens para a capa
-            title: album.name,
-            description: album.description || 'Sem descrição',
-            photoCount: totalPhotos
-        });
-    }
+    const allUserAlbums = await db.Album.findAll({
+        where: { userId: userId },
+        order: [['name', 'ASC']]
+    });
+    
+    for (const album of allUserAlbums) {
+        // Busca as 4 primeiras fotos do álbum separadamente
+        const coverPhotos = await album.getPhotos({
+            limit: 4,
+            order: [['createdAt', 'DESC']]
+        });
+        
+        const totalPhotos = await album.countPhotos();
+        
+        photosAndAlbums.push({
+            id: album.id,
+            type: 'album',
+            coverImages: coverPhotos.map(p => ({ filepath: p.filepath })), // Passa as imagens para a capa
+            title: album.name,
+            description: album.description || 'Sem descrição',
+            photoCount: totalPhotos
+        });
+    }
 }
 
-    // Ordenar photosAndAlbums (se misturar fotos e álbuns)
-    photosAndAlbums.sort((a, b) => {
-        // Exemplo: álbuns primeiro, depois fotos, ambos por título
-        if (a.type === 'album' && b.type === 'photo') return -1;
-        if (a.type === 'photo' && b.type === 'album') return 1;
-        return a.title.localeCompare(b.title); // Ordena alfabeticamente
-    });
+    // Ordenar photosAndAlbums (se misturar fotos e álbuns)
+    photosAndAlbums.sort((a, b) => {
+        // Exemplo: álbuns primeiro, depois fotos, ambos por título
+        if (a.type === 'album' && b.type === 'photo') return -1;
+        if (a.type === 'photo' && b.type === 'album') return 1;
+        return a.title.localeCompare(b.title); // Ordena alfabeticamente
+    });
 
 
-    // Renderiza o dashboard com todos os dados e os valores dos filtros selecionados
-    res.render('dashboard', {
-      user: req.user,
-      photosAndAlbums: photosAndAlbums,
-      tags: uniqueTags,
-      albums: albumsForFilter, // Passa os objetos de álbum completos para o filtro de álbum
-      locations: uniqueLocations,
-      equipments: uniqueEquipments,
-      selectedTag: tag || '', // Passa o valor selecionado para o EJS
-      selectedAlbumId: albumId || '',
-      selectedLocation: location || '',
-      selectedEquipment: equipment || '',
-      selectedCaptureDate: captureDate || '',
-      searchTerm: search || '',
-      success: req.query.success,
-      error: req.query.error
-    });
+    // Renderiza o dashboard com todos os dados e os valores dos filtros selecionados
+    res.render('dashboard', {
+      user: req.user,
+      photosAndAlbums: photosAndAlbums,
+      tags: uniqueTags,
+      albums: albumsForFilter, // Passa os objetos de álbum completos para o filtro de álbum
+      locations: uniqueLocations,
+      equipments: uniqueEquipments,
+      selectedTag: tag || '', // Passa o valor selecionado para o EJS
+      selectedAlbumId: albumId || '',
+      selectedLocation: location || '',
+      selectedEquipment: equipment || '',
+      selectedCaptureDate: captureDate || '',
+      searchTerm: search || '',
+      success: req.query.success,
+      error: req.query.error
+    });
 
-  } catch (error) {
-    console.error('Erro ao carregar dashboard com filtros:', error);
-    res.redirect('/login?error=Não foi possível carregar o dashboard. Tente novamente.');
-  }
+  } catch (error) {
+    console.error('Erro ao carregar dashboard com filtros:', error);
+    res.redirect('/login?error=Não foi possível carregar o dashboard. Tente novamente.');
+  }
 });
 
 // GET profile 
@@ -1097,6 +1099,26 @@ router.post('/upload', isAuthenticated, upload.single('image'), async function(r
     // Pega os dados do formulário (incluindo os novos campos)
     const { title, description, location, equipment, capture_date, tags, album } = req.body;
 
+    let finalCaptureDate = null;
+    if (capture_date) {
+        // Cria um objeto Date com a data na timezone local do servidor Node.js
+        // Isso impede que o 'Z' (UTC) mude a data para o dia anterior no fuso local.
+       const dateObj = new Date(capture_date + 'T00:00:00'); 
+        
+        // Formata o objeto Date de volta para a string YYYY-MM-DD,
+        // garantindo que o fuso horário não altere o dia.
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Mês é 0-indexado
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        finalCaptureDate = `${year}-${month}-${day}`; // Formato final: 'AAAA-MM-DD'
+
+        console.log(`[Upload DEBUG] capture_date do formulário: '${capture_date}'`);
+        console.log(`[Upload DEBUG] dateObj (Date obj - UTC): '${dateObj.toISOString()}'`); 
+        console.log(`[Upload DEBUG] dateObj (Local String): '${dateObj.toLocaleString()}'`); 
+        console.log(`[Upload DEBUG] finalCaptureDate (Formatted String para DB): '${finalCaptureDate}'`); // O que será salvo
+    }
+
+    
     // 1. Criar o registro da foto no banco de dados
     const newPhoto = await db.Photo.create({
       userId: req.user.id,
@@ -1109,7 +1131,7 @@ router.post('/upload', isAuthenticated, upload.single('image'), async function(r
       description: description || null,
       location: location || null,
       equipment: equipment || null,
-      captureDate: capture_date || null, // Salva a data de captura
+      captureDate: finalCaptureDate || null, // Salva a data de captura
     });
 
     // 2. Lidar com as Tags
